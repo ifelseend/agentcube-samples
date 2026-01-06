@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>接金币小游戏</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .game-info {
+            display: flex;
+            gap: 30px;
+            font-size: 18px;
+        }
+        
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .icon {
+            font-size: 20px;
+        }
+        
+        canvas {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #F0F8FF 100%);
+            display: block;
+            cursor: none;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            text-align: center;
+            color: #666;
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        
+        .game-over h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .start-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        
+        .start-screen h1 {
+            color: #764ba2;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            margin: 20px 0;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .start-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .start-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="info-item">
+                    <span class="icon">💰</span>
+                    <span>得分: <span id="score">0</span></span>
+                </div>
+                <div class="info-item">
+                    <span class="icon">❤️</span>
+                    <span>生命: <span id="lives">3</span></span>
+                </div>
+                <div class="info-item">
+                    <span class="icon">⭐</span>
+                    <span>等级: <span id="level">1</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <div style="position: relative;">
+            <canvas id="gameCanvas" width="600" height="500"></canvas>
+            
+            <div class="start-screen" id="startScreen">
+                <h1>🪙 接金币小游戏 🪙</h1>
+                <div class="instructions">
+                    <p>📋 游戏说明：</p>
+                    <p>🎮 使用鼠标或左右方向键控制篮子</p>
+                    <p>💰 接住金币获得10分</p>
+                    <p>💣 避开炸弹，否则失去一条生命</p>
+                    <p>💎 接住钻石获得额外分数</p>
+                    <p>❤️ 生命值归零游戏结束</p>
+                </div>
+                <button class="start-btn" onclick="startGame()">开始游戏</button>
+            </div>
+            
+            <div class="game-over" id="gameOver">
+                <h2>游戏结束！</h2>
+                <p style="font-size: 24px; color: #667eea; margin: 15px 0;">最终得分: <span id="finalScore">0</span></p>
+                <button class="restart-btn" onclick="restartGame()">重新开始</button>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <p>🎮 使用鼠标或 ← → 方向键控制</p>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = {"player": {"x": 250, "y": 400, "width": 60, "height": 20, "speed": 8, "color": "#4CAF50"}, "game": {"width": 600, "height": 500, "score": 0, "lives": 3, "level": 1, "goldValue": 10, "bombPenalty": 1}, "spawn": {"goldChance": 0.7, "bombChance": 0.2, "powerupChance": 0.1, "minInterval": 1000, "maxInterval": 3000}, "items": {"gold": {"width": 30, "height": 30, "speed": 3, "color": "#FFD700"}, "bomb": {"width": 25, "height": 25, "speed": 4, "color": "#FF4444"}, "powerup": {"width": 35, "height": 35, "speed": 2, "color": "#00CED1"}}, "initialItems": [{"type": "gold", "x": 283, "y": -434, "collected": false}, {"type": "gold", "x": 55, "y": -137, "collected": false}, {"type": "gold", "x": 524, "y": -295, "collected": false}, {"type": "gold", "x": 535, "y": -178, "collected": false}, {"type": "bomb", "x": 343, "y": -157, "collected": false}, {"type": "gold", "x": 295, "y": -349, "collected": false}, {"type": "bomb", "x": 145, "y": -288, "collected": false}, {"type": "powerup", "x": 84, "y": -476, "collected": false}, {"type": "gold", "x": 318, "y": -188, "collected": false}, {"type": "bomb", "x": 147, "y": -207, "collected": false}]};
+        
+        // Canvas设置
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 游戏状态
+        let gameState = {
+            score: 0,
+            lives: gameData.game.lives,
+            level: gameData.game.level,
+            isPlaying: false,
+            isPaused: false,
+            player: {...gameData.player},
+            items: [],
+            lastSpawnTime: 0,
+            spawnInterval: 2000,
+            mouseX: gameData.player.x
+        };
+        
+        // 初始化物品
+        function initItems() {
+            gameState.items = gameData.initialItems.map(item => ({...item}));
+        }
+        
+        // 绘制玩家
+        function drawPlayer() {
+            const { x, y, width, height, color } = gameState.player;
+            
+            // 绘制篮子
+            ctx.fillStyle = color;
+            ctx.fillRect(x - width/2, y, width, height);
+            
+            // 绘制篮子边框
+            ctx.strokeStyle = '#2E7D32';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - width/2, y, width, height);
+            
+            // 绘制篮子把手
+            ctx.beginPath();
+            ctx.arc(x - width/2, y + height/2, 8, Math.PI/2, Math.PI * 1.5);
+            ctx.arc(x + width/2, y + height/2, 8, Math.PI * 1.5, Math.PI/2);
+            ctx.stroke();
+        }
+        
+        // 绘制物品
+        function drawItem(item) {
+            const config = gameData.items[item.type];
+            const { x, y } = item;
+            
+            ctx.save();
+            
+            if (item.type === 'gold') {
+                // 绘制金币
+                ctx.fillStyle = config.color;
+                ctx.beginPath();
+                ctx.arc(x, y, config.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 金币光泽
+                ctx.fillStyle = '#FFED4E';
+                ctx.beginPath();
+                ctx.arc(x - 5, y - 5, config.width/4, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 金币符号
+                ctx.fillStyle = '#B8860B';
+                ctx.font = 'bold 16px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('$', x, y);
+                
+            } else if (item.type === 'bomb') {
+                // 绘制炸弹
+                ctx.fillStyle = config.color;
+                ctx.beginPath();
+                ctx.arc(x, y, config.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 炸弹引线
+                ctx.strokeStyle = '#8B4513';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(x, y - config.width/2);
+                ctx.lineTo(x, y - config.width/2 - 10);
+                ctx.stroke();
+                
+                // 火花
+                ctx.fillStyle = '#FFA500';
+                ctx.beginPath();
+                ctx.arc(x, y - config.width/2 - 10, 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+            } else if (item.type === 'powerup') {
+                // 绘制钻石
+                ctx.fillStyle = config.color;
+                ctx.beginPath();
+                ctx.moveTo(x, y - config.height/2);
+                ctx.lineTo(x + config.width/2, y);
+                ctx.lineTo(x, y + config.height/2);
+                ctx.lineTo(x - config.width/2, y);
+                ctx.closePath();
+                ctx.fill();
+                
+                // 钻石光泽
+                ctx.fillStyle = '#7FFFD4';
+                ctx.beginPath();
+                ctx.moveTo(x, y - config.height/3);
+                ctx.lineTo(x + config.width/3, y);
+                ctx.lineTo(x, y + config.height/3);
+                ctx.lineTo(x - config.width/3, y);
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            ctx.restore();
+        }
+        
+        // 更新物品位置
+        function updateItems() {
+            gameState.items = gameState.items.filter(item => {
+                if (item.collected) return false;
+                
+                // 更新位置
+                const config = gameData.items[item.type];
+                item.y += config.speed;
+                
+                // 检查碰撞
+                if (checkCollision(item)) {
+                    handleCollection(item);
+                    return false;
+                }
+                
+                // 移除超出屏幕的物品
+                return item.y < canvas.height + 50;
+            });
+        }
+        
+        // 碰撞检测
+        function checkCollision(item) {
+            const config = gameData.items[item.type];
+            const player = gameState.player;
+            
+            return item.x > player.x - player.width/2 &&
+                   item.x < player.x + player.width/2 &&
+                   item.y + config.height/2 > player.y &&
+                   item.y - config.height/2 < player.y + player.height;
+        }
+        
+        // 处理收集
+        function handleCollection(item) {
+            if (item.type === 'gold') {
+                gameState.score += gameData.game.goldValue;
+                showFloatingText(item.x, item.y, '+10', '#FFD700');
+            } else if (item.type === 'bomb') {
+                gameState.lives -= gameData.game.bombPenalty;
+                showFloatingText(item.x, item.y, '-1❤️', '#FF4444');
+                shakeScreen();
+            } else if (item.type === 'powerup') {
+                gameState.score += 50;
+                showFloatingText(item.x, item.y, '+50', '#00CED1');
+            }
+            
+            updateUI();
+            checkGameOver();
+        }
+        
+        // 显示飘字效果
+        function showFloatingText(x, y, text, color) {
+            const floatingText = {
+                x, y, text, color,
+                opacity: 1,
+                offsetY: 0
+            };
+            
+            const animate = () => {
+                if (floatingText.opacity <= 0) return;
+                
+                ctx.save();
+                ctx.globalAlpha = floatingText.opacity;
+                ctx.fillStyle = floatingText.color;
+                ctx.font = 'bold 20px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(floatingText.text, floatingText.x, floatingText.y - floatingText.offsetY);
+                ctx.restore();
+                
+                floatingText.opacity -= 0.02;
+                floatingText.offsetY += 2;
+                
+                if (floatingText.opacity > 0) {
+                    requestAnimationFrame(animate);
+                }
+            };
+            
+            animate();
+        }
+        
+        // 屏幕震动效果
+        function shakeScreen() {
+            const originalTransform = canvas.style.transform;
+            let shakeCount = 0;
+            
+            const shake = () => {
+                if (shakeCount >= 10) {
+                    canvas.style.transform = originalTransform;
+                    return;
+                }
+                
+                const offsetX = (Math.random() - 0.5) * 10;
+                const offsetY = (Math.random() - 0.5) * 10;
+                canvas.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+                
+                shakeCount++;
+                setTimeout(shake, 50);
+            };
+            
+            shake();
+        }
+        
+        // 生成新物品
+        function spawnItem() {
+            const now = Date.now();
+            if (now - gameState.lastSpawnTime < gameState.spawnInterval) return;
+            
+            const rand = Math.random();
+            let type;
+            
+            if (rand < gameData.spawn.goldChance) {
+                type = 'gold';
+            } else if (rand < gameData.spawn.goldChance + gameData.spawn.bombChance) {
+                type = 'bomb';
+            } else {
+                type = 'powerup';
+            }
+            
+            gameState.items.push({
+                type,
+                x: Math.random() * (canvas.width - 60) + 30,
+                y: -30,
+                collected: false
+            });
+            
+            gameState.lastSpawnTime = now;
+            gameState.spawnInterval = Math.random() * 
+                (gameData.spawn.maxInterval - gameData.spawn.minInterval) + 
+                gameData.spawn.minInterval;
+        }
+        
+        // 更新等级
+        function updateLevel() {
+            const newLevel = Math.floor(gameState.score / 100) + 1;
+            if (newLevel > gameState.level) {
+                gameState.level = newLevel;
+                showFloatingText(canvas.width/2, canvas.height/2, `Level ${gameState.level}!`, '#764ba2');
+                
+                // 增加难度
+                gameData.items.gold.speed += 0.5;
+                gameData.items.bomb.speed += 0.5;
+            }
+        }
+        
+        // 更新UI
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('level').textContent = gameState.level;
+        }
+        
+        // 检查游戏结束
+        function checkGameOver() {
+            if (gameState.lives <= 0) {
+                gameState.isPlaying = false;
+                document.getElementById('finalScore').textContent = gameState.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+        }
+        
+        // 游戏主循环
+        function gameLoop() {
+            if (!gameState.isPlaying) return;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制背景渐变
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#87CEEB');
+            gradient.addColorStop(0.5, '#E0F6FF');
+            gradient.addColorStop(1, '#F0F8FF');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新和绘制
+            updateItems();
+            spawnItem();
+            updateLevel();
+            
+            gameState.items.forEach(drawItem);
+            drawPlayer();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 开始游戏
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            gameState.isPlaying = true;
+            gameState.score = 0;
+            gameState.lives = gameData.game.lives;
+            gameState.level = 1;
+            gameState.items = [];
+            updateUI();
+            gameLoop();
+        }
+        
+        // 重新开始
+        function restartGame() {
+            document.getElementById('gameOver').style.display = 'none';
+            startGame();
+        }
+        
+        // 鼠标控制
+        canvas.addEventListener('mousemove', (e) => {
+            if (!gameState.isPlaying) return;
+            const rect = canvas.getBoundingClientRect();
+            gameState.mouseX = e.clientX - rect.left;
+        });
+        
+        // 键盘控制
+        document.addEventListener('keydown', (e) => {
+            if (!gameState.isPlaying) return;
+            
+            if (e.key === 'ArrowLeft') {
+                gameState.player.x = Math.max(gameState.player.width/2, gameState.player.x - gameState.player.speed);
+            } else if (e.key === 'ArrowRight') {
+                gameState.player.x = Math.min(canvas.width - gameState.player.width/2, gameState.player.x + gameState.player.speed);
+            }
+        });
+        
+        // 平滑移动
+        function smoothMove() {
+            if (!gameState.isPlaying) return;
+            
+            const dx = gameState.mouseX - gameState.player.x;
+            gameState.player.x += dx * 0.1;
+            
+            // 限制在画布内
+            gameState.player.x = Math.max(gameState.player.width/2, 
+                                 Math.min(canvas.width - gameState.player.width/2, gameState.player.x));
+            
+            requestAnimationFrame(smoothMove);
+        }
+        
+        // 初始化
+        smoothMove();
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+agent_name: game-agent
+language: python
+entrypoint: python main.py
+port: 8080
+build_mode: local
+version: 0.0.1
+image:
+  repository_url: game-agent:0.0.1
+  tag: 0.0.1
+  build_mode: local
+  build_size: 422.4MB
+  build_time: 126.2s
+requirements_file: requirements.txt
+registry_url: swr.cn-north-4.myhuaweicloud.com/ai-agent
+registry_username: cn-north-4@HPUA88P4EVJ6Z1WWS2IX
+registry_password: 84c5fc893396e207c2be9fbeca48b5c17c8712c4efc2cc29d41d3b0dd5a28dd0
+agent_endpoint: http://113.44.252.40:8080
+workload_manager_url: http://10.247.248.181:8080
+router_url: http://10.247.14.89:8080
+readiness_probe_path: /health
+readiness_probe_port: 8080

@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2026元旦庆祝游戏 - 节日盛典版</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a237e 30%, #283593 60%, #3949ab 100%);
+            font-family: 'Noto Sans SC', sans-serif;
+            overflow: hidden;
+            cursor: crosshair;
+            position: relative;
+        }
+        
+        /* 节日背景装饰 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(78, 205, 196, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        canvas {
+            display: block;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .game-header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .score-panel {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .level-info {
+            color: #FFD700;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .timer-panel {
+            color: #FF69B4;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-align: right;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 105, 180, 0.3);
+        }
+        
+        .timer-panel.warning {
+            color: #FF6B6B;
+            animation: pulse 1s infinite;
+            border-color: rgba(255, 107, 107, 0.6);
+        }
+        
+        .combo {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: rgba(255, 215, 0, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+        }
+        
+        .combo.active {
+            opacity: 1;
+            animation: comboGlow 0.5s ease-in-out;
+        }
+        
+        @keyframes comboGlow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .powerup-indicator {
+            position: absolute;
+            top: 130px;
+            left: 20px;
+            color: #00FA9A;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+            background: rgba(0, 250, 154, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(0, 250, 154, 0.5);
+        }
+        
+        .powerup-indicator.active {
+            opacity: 1;
+        }
+        
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 48px;
+            font-weight: bold;
+            text-align: center;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+            animation: pulse 2s infinite;
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .year-display {
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 72px;
+            color: #FFD700;
+            margin-bottom: 20px;
+            animation: glow 2s ease-in-out infinite;
+            text-shadow: 
+                0 0 20px #FFD700,
+                0 0 40px #FFD700,
+                0 0 60px #FFA500;
+        }
+        
+        .festival-subtitle {
+            font-size: 28px;
+            color: #FF69B4;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { 
+                text-shadow: 
+                    0 0 20px #FFD700,
+                    0 0 40px #FFD700,
+                    0 0 60px #FFA500;
+            }
+            50% { 
+                text-shadow: 
+                    0 0 30px #FFD700,
+                    0 0 50px #FFD700,
+                    0 0 70px #FFA500,
+                    0 0 80px #FF69B4;
+            }
+        }
+        
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .particle-text {
+            position: absolute;
+            color: #FFD700;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 1s ease-out forwards;
+            z-index: 20;
+        }
+        
+        @keyframes floatUp {
+            0% { 
+                opacity: 1; 
+                transform: translateY(0);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translateY(-50px);
+            }
+        }
+        
+        .level-complete {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(139, 0, 0, 0.8));
+            color: white;
+            padding: 40px 60px;
+            border-radius: 25px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            border: 3px solid #FFD700;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.6);
+        }
+        
+        .level-complete.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .celebration-text {
+            font-size: 32px;
+            color: #FFD700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        .next-level-btn {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .next-level-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, rgba(139, 0, 0, 0.9), rgba(178, 34, 34, 0.8));
+            color: white;
+            padding: 40px 60px;
+            border-radius: 25px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 100;
+            display: none;
+            border: 3px solid #FF6B6B;
+            box-shadow: 0 0 50px rgba(255, 107, 107, 0.6);
+        }
+        
+        .game-over.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .restart-btn {
+            background: linear-gradient(45deg, #FF6B6B, #FF1493);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+        
+        .restart-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .progress-bar {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .target-score {
+            position: absolute;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        /* 节日装饰样式 */
+        .festival-decoration {
+            position: absolute;
+            pointer-events: none;
+            z-index: 3;
+        }
+        
+        .lantern-decoration {
+            position: absolute;
+            font-size: 30px;
+            animation: swing 3s ease-in-out infinite;
+        }
+        
+        @keyframes swing {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+        
+        .snowflake-decoration {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 20px;
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(700px);
+            }
+        }
+        
+        .ribbon-decoration {
+            position: absolute;
+            width: 4px;
+            height: 80px;
+            background: linear-gradient(to bottom, transparent, currentColor);
+            animation: wave 2s ease-in-out infinite;
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: translateX(0) rotate(0deg); }
+            50% { transform: translateX(20px) rotate(10deg); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- 节日装饰元素 -->
+    <div class="festival-decoration" id="festivalDecorations"></div>
+    
+    <div class="ui-overlay">
+        <div class="game-header">
+            <div class="score-panel">
+                <div>得分: <span id="score">0</span></div>
+                <div>最高连击: <span id="maxCombo">0</span></div>
+            </div>
+            <div class="level-info">
+                <div id="levelName">准备开始</div>
+                <div>目标: <span id="targetScore">0</span>分</div>
+            </div>
+            <div class="timer-panel" id="timerPanel">
+                <div>时间: <span id="timer">60</span>秒</div>
+            </div>
+        </div>
+        <div class="combo" id="combo">连击 x<span id="comboCount">0</span>!</div>
+        <div class="powerup-indicator" id="powerupIndicator"></div>
+        <div class="message">
+            <div class="year-display">2026</div>
+            <div class="festival-subtitle">🎊 元旦快乐 🎊</div>
+            <div id="gameMessage">元旦快乐！Happy New Year!</div>
+        </div>
+        <div class="instructions">点击气球获得分数！收集道具获得特殊能力！在时间内达到目标分数！</div>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="target-score">进度: <span id="currentProgress">0</span> / <span id="targetProgress">0</span></div>
+    </div>
+    
+    <div class="level-complete" id="levelComplete">
+        <div>🎉 关卡完成！🎉</div>
+        <div class="celebration-text" id="celebrationText"></div>
+        <div>用时: <span id="timeUsed">0</span>秒</div>
+        <div>得分: <span id="finalScore">0</span></div>
+        <button class="next-level-btn" onclick="nextLevel()">下一关</button>
+    </div>
+    
+    <div class="game-over" id="gameOver">
+        <div>⏰ 时间到！</div>
+        <div>最终得分: <span id="finalScoreOver">0</span></div>
+        <div>目标分数: <span id="targetScoreOver">0</span></div>
+        <button class="restart-btn" onclick="restartGame()">重新开始</button>
+    </div>
+
+    <script>
+        // 注入游戏数据
+        const gameData = {"levels": [{"id": 1, "name": "\u7b2c1\u5173", "timeLimit": 60, "targetScore": 100, "balloonCount": 5, "balloonSpeed": 1.0, "powerupCount": 2, "celebrationText": "\u8d8a\u6765\u8d8a\u597d\uff01"}, {"id": 2, "name": "\u7b2c2\u5173", "timeLimit": 55, "targetScore": 150, "balloonCount": 6, "balloonSpeed": 1.3, "powerupCount": 2, "celebrationText": "\u8868\u73b0\u51fa\u8272\uff01"}, {"id": 3, "name": "\u7b2c3\u5173", "timeLimit": 50, "targetScore": 200, "balloonCount": 7, "balloonSpeed": 1.6, "powerupCount": 2, "celebrationText": "\u7ee7\u7eed\u52a0\u6cb9\uff01"}, {"id": 4, "name": "\u7b2c4\u5173", "timeLimit": 45, "targetScore": 250, "balloonCount": 8, "balloonSpeed": 1.9, "powerupCount": 2, "celebrationText": "\u7ee7\u7eed\u52a0\u6cb9\uff01"}, {"id": 5, "name": "\u7b2c5\u5173", "timeLimit": 40, "targetScore": 300, "balloonCount": 9, "balloonSpeed": 2.2, "powerupCount": 2, "celebrationText": "\u65b0\u5e74\u8fdb\u6b65\uff01"}, {"id": 6, "name": "\u7b2c6\u5173", "timeLimit": 35, "targetScore": 350, "balloonCount": 10, "balloonSpeed": 2.5, "powerupCount": 3, "celebrationText": "\u767e\u53d1\u767e\u4e2d\uff01"}, {"id": 7, "name": "\u7b2c7\u5173", "timeLimit": 32, "targetScore": 425, "balloonCount": 11, "balloonSpeed": 2.9, "powerupCount": 3, "celebrationText": "\u767e\u53d1\u767e\u4e2d\uff01"}, {"id": 8, "name": "\u7b2c8\u5173", "timeLimit": 29, "targetScore": 500, "balloonCount": 12, "balloonSpeed": 3.3, "powerupCount": 3, "celebrationText": "\u767e\u53d1\u767e\u4e2d\uff01"}, {"id": 9, "name": "\u7b2c9\u5173", "timeLimit": 26, "targetScore": 575, "balloonCount": 13, "balloonSpeed": 3.7, "powerupCount": 3, "celebrationText": "\u7089\u706b\u7eaf\u9752\uff01"}, {"id": 10, "name": "\u7b2c10\u5173", "timeLimit": 23, "targetScore": 650, "balloonCount": 14, "balloonSpeed": 4.1, "powerupCount": 3, "celebrationText": "\u6280\u827a\u7cbe\u6e5b\uff01"}, {"id": 11, "name": "\u7b2c11\u5173", "timeLimit": 20, "targetScore": 750, "balloonCount": 15, "balloonSpeed": 4.5, "powerupCount": 2, "celebrationText": "\u7089\u706b\u7eaf\u9752\uff01"}, {"id": 12, "name": "\u7b2c12\u5173", "timeLimit": 18, "targetScore": 850, "balloonCount": 16, "balloonSpeed": 5.0, "powerupCount": 2, "celebrationText": "\u53cd\u5e94\u795e\u901f\uff01"}, {"id": 13, "name": "\u7b2c13\u5173", "timeLimit": 16, "targetScore": 950, "balloonCount": 17, "balloonSpeed": 5.5, "powerupCount": 2, "celebrationText": "\u53cd\u5e94\u795e\u901f\uff01"}, {"id": 14, "name": "\u7b2c14\u5173", "timeLimit": 14, "targetScore": 1050, "balloonCount": 18, "balloonSpeed": 6.0, "powerupCount": 2, "celebrationText": "\u53cd\u5e94\u795e\u901f\uff01"}, {"id": 15, "name": "\u7b2c15\u5173", "timeLimit": 12, "targetScore": 1150, "balloonCount": 19, "balloonSpeed": 6.5, "powerupCount": 2, "celebrationText": "\u7089\u706b\u7eaf\u9752\uff01"}, {"id": 11, "name": "\u7b2c11\u5173", "timeLimit": 20, "targetScore": 750, "balloonCount": 15, "balloonSpeed": 4.5, "powerupCount": 2, "celebrationText": "\u6e38\u620f\u5927\u5e08\uff01"}, {"id": 12, "name": "\u7b2c12\u5173", "timeLimit": 18, "targetScore": 850, "balloonCount": 16, "balloonSpeed": 5.0, "powerupCount": 2, "celebrationText": "\u6e38\u620f\u5927\u5e08\uff01"}, {"id": 13, "name": "\u7b2c13\u5173", "timeLimit": 16, "targetScore": 950, "balloonCount": 17, "balloonSpeed": 5.5, "powerupCount": 2, "celebrationText": "\u65e0\u4eba\u80fd\u654c\uff01"}, {"id": 14, "name": "\u7b2c14\u5173", "timeLimit": 14, "targetScore": 1050, "balloonCount": 18, "balloonSpeed": 6.0, "powerupCount": 2, "celebrationText": "\u65e0\u4eba\u80fd\u654c\uff01"}, {"id": 15, "name": "\u7b2c15\u5173", "timeLimit": 12, "targetScore": 1150, "balloonCount": 19, "balloonSpeed": 6.5, "powerupCount": 2, "celebrationText": "\u767b\u5cf0\u9020\u6781\uff01"}], "fireworks": [{"x": 272, "y": 170, "color": "#FF6B6B", "particles": [{"vx": 3.7120942375739796, "vy": 0.0, "life": 1.0}, {"vx": 5.587846574152318, "vy": 0.7059091845648773, "life": 1.0}, {"vx": 2.2678072835620715, "vy": 0.5822739441428189, "life": 1.0}, {"vx": 2.5512849379811, "vy": 1.0101251653704744, "life": 1.0}, {"vx": 5.095529916570041, "vy": 2.801291277021818, "life": 1.0}, {"vx": 3.1756517971952523, "vy": 2.307246084799006, "life": 1.0}, {"vx": 4.397656912211672, "vy": 4.129674719707109, "life": 1.0}, {"vx": 2.2312387242587852, "vy": 2.6971043018217147, "life": 1.0}, {"vx": 2.8547311046460133, "vy": 4.498336428931899, "life": 1.0}, {"vx": 1.5251528116601827, "vy": 3.241114705372742, "life": 1.0}, {"vx": 0.9046789238515914, "vy": 2.7843154303674673, "life": 1.0}, {"vx": 0.9252491404041158, "vy": 4.850325852265533, "life": 1.0}, {"vx": 0.33760916448389355, "vy": 5.366144004589131, "life": 1.0}, {"vx": -0.380654723570891, "vy": 6.050333573826674, "life": 1.0}, {"vx": -0.5453035558380167, "vy": 2.8585813471366843, "life": 1.0}, {"vx": -1.3327690463615107, "vy": 4.1018413528435875, "life": 1.0}, {"vx": -0.9908857304700266, "vy": 2.105739364486698, "life": 1.0}, {"vx": -1.2819887819082612, "vy": 2.0200910795957587, "life": 1.0}, {"vx": -2.5039096895159756, "vy": 3.0267068788034104, "life": 1.0}, {"vx": -3.8392597598916764, "vy": 3.6053048906081435, "life": 1.0}, {"vx": -4.635861322550363, "vy": 3.3681504047680177, "life": 1.0}, {"vx": -4.8838966596066955, "vy": 2.68494490944751, "life": 1.0}, {"vx": -3.4404271259175396, "vy": 1.3621614613781992, "life": 1.0}, {"vx": -5.701621106718452, "vy": 1.463927483556843, "life": 1.0}, {"vx": -5.685571197976639, "vy": 0.7182546755514851, "life": 1.0}, {"vx": -3.993719792508473, "vy": 4.890896160586933e-16, "life": 1.0}, {"vx": -2.6155450916005067, "vy": -0.3304201857196612, "life": 1.0}, {"vx": -6.14969843741679, "vy": -1.57897418815023, "life": 1.0}, {"vx": -4.03392778907682, "vy": -1.5971449971629792, "life": 1.0}, {"vx": -2.913347193862026, "vy": -1.6016261732784014, "life": 1.0}, {"vx": -3.843408542151652, "vy": -2.7923997583722566, "life": 1.0}, {"vx": -1.949109134669986, "vy": -1.8303353081149598, "life": 1.0}, {"vx": -1.818126426201414, "vy": -2.1977373160698312, "life": 1.0}, {"vx": -1.762065585145514, "vy": -2.776571074917455, "life": 1.0}, {"vx": -0.9770109787162765, "vy": -2.07625401613428, "life": 1.0}, {"vx": -1.6440666537020108, "vy": -5.0599168741174845, "life": 1.0}, {"vx": -0.5376070248799429, "vy": -2.81823471891674, "life": 1.0}, {"vx": -0.3826895742982143, "vy": -6.082676599962706, "life": 1.0}, {"vx": 0.24792724811477004, "vy": -3.940690763176366, "life": 1.0}, {"vx": 1.2262582158718458, "vy": -6.428270685448541, "life": 1.0}, {"vx": 1.993193062491668, "vy": -6.134417474842538, "life": 1.0}, {"vx": 1.7286531163060612, "vy": -3.673574866015688, "life": 1.0}, {"vx": 3.3663271965244195, "vy": -5.30448287587762, "life": 1.0}, {"vx": 3.644300490714539, "vy": -4.4052025557697245, "life": 1.0}, {"vx": 5.005787087188732, "vy": -4.700746965684301, "life": 1.0}, {"vx": 3.4552505701921974, "vy": -2.510386484159405, "life": 1.0}, {"vx": 4.310588121543437, "vy": -2.3697658735054032, "life": 1.0}, {"vx": 3.597200854424025, "vy": -1.4242325715375652, "life": 1.0}, {"vx": 5.923286744136261, "vy": -1.5208415458388327, "life": 1.0}, {"vx": 5.525567172538226, "vy": -0.6980414664689758, "life": 1.0}]}, {"x": 476, "y": 114, "color": "#98D8C8", "particles": [{"vx": 6.822938202502717, "vy": 0.0, "life": 1.0}, {"vx": 2.4247704863300377, "vy": 0.3063197484125411, "life": 1.0}, {"vx": 6.58676069859703, "vy": 1.6911927035849588, "life": 1.0}, {"vx": 5.88084060777434, "vy": 2.3283895118928752, "life": 1.0}, {"vx": 4.284210994654781, "vy": 2.3552649252868805, "life": 1.0}, {"vx": 4.746649023490792, "vy": 3.4486423810811773, "life": 1.0}, {"vx": 3.8945620090516364, "vy": 3.6572371592816366, "life": 1.0}, {"vx": 2.172525588109978, "vy": 2.626132311976478, "life": 1.0}, {"vx": 3.518033792408759, "vy": 5.543534219685501, "life": 1.0}, {"vx": 2.3988164777075287, "vy": 5.097744502680442, "life": 1.0}, {"vx": 1.0987323690099409, "vy": 3.3815505238634604, "life": 1.0}, {"vx": 0.9159913022026592, "vy": 4.801794564849255, "life": 1.0}, {"vx": 0.30161320350424187, "vy": 4.794004588600033, "life": 1.0}, {"vx": -0.35655345831894153, "vy": 5.6672549324856725, "life": 1.0}, {"vx": -1.0482446892960446, "vy": 5.495091099216809, "life": 1.0}, {"vx": -0.7618105437648511, "vy": 2.344611768991613, "life": 1.0}, {"vx": -2.5290619225447166, "vy": 5.374530162020445, "life": 1.0}, {"vx": -3.6843856739361494, "vy": 5.80566284100404, "life": 1.0}, {"vx": -3.204198913594233, "vy": 3.873211135943489, "life": 1.0}, {"vx": -3.812982110478416, "vy": 3.5806285353031337, "life": 1.0}, {"vx": -3.7007477038472194, "vy": 2.6887505922631942, "life": 1.0}, {"vx": -4.103500950778569, "vy": 2.2559187379679733, "life": 1.0}, {"vx": -5.3099987508109345, "vy": 2.102377232126962, "life": 1.0}, {"vx": -6.426575189322075, "vy": 1.650064055239874, "life": 1.0}, {"vx": -6.301004195042526, "vy": 0.7960019435460444, "life": 1.0}, {"vx": -5.717452497441162, "vy": 7.001859900268359e-16, "life": 1.0}, {"vx": -2.357142355907544, "vy": -0.29777632873079524, "life": 1.0}, {"vx": -2.9557749507436903, "vy": -0.7589140184190462, "life": 1.0}, {"vx": -5.103413036636703, "vy": -2.0205841616679017, "life": 1.0}, {"vx": -2.867530648794355, "vy": -1.5764383144800496, "life": 1.0}, {"vx": -2.552435964878488, "vy": -1.8544532784946168, "life": 1.0}, {"vx": -4.968569745430595, "vy": -4.665797555473031, "life": 1.0}, {"vx": -4.1200923889335686, "vy": -4.980336162723752, "life": 1.0}, {"vx": -2.6394605650635676, "vy": -4.159124336870567, "life": 1.0}, {"vx": -1.472074130571123, "vy": -3.128316766369981, "life": 1.0}, {"vx": -1.9742283682066628, "vy": -6.076050147454008, "life": 1.0}, {"vx": -1.1189102029668847, "vy": -5.865532694733016, "life": 1.0}, {"vx": -0.36985228003177895, "vy": -5.878633650570954, "life": 1.0}, {"vx": 0.21700370120011964, "vy": -3.449175060010078, "life": 1.0}, {"vx": 1.1632112522018996, "vy": -6.097766927658908, "life": 1.0}, {"vx": 1.622293705729399, "vy": -4.992906630586409, "life": 1.0}, {"vx": 2.1637176876249176, "vy": -4.5981341423765265, "life": 1.0}, {"vx": 3.724588881773971, "vy": -5.869012959718363, "life": 1.0}, {"vx": 1.6492946774893977, "vy": -1.9936547897204695, "life": 1.0}, {"vx": 2.5765677971614114, "vy": -2.4195582120110535, "life": 1.0}, {"vx": 4.050370283510561, "vy": -2.9427662651395545, "life": 1.0}, {"vx": 5.7806787241540984, "vy": -3.1779550214354897, "life": 1.0}, {"vx": 6.4012431339604365, "vy": -2.5344314478590397, "life": 1.0}, {"vx": 4.78008364921697, "vy": -1.227316880026234, "life": 1.0}, {"vx": 4.2633648031253015, "vy": -0.5385882256678355, "life": 1.0}]}, {"x": 305, "y": 148, "color": "#00FA9A", "particles": [{"vx": 4.66419241895078, "vy": 0.0, "life": 1.0}, {"vx": 6.663422034928371, "vy": 0.8417859639966025, "life": 1.0}, {"vx": 5.997200902582072, "vy": 1.5398194761410187, "life": 1.0}, {"vx": 3.1156751787617107, "vy": 1.233583069587608, "life": 1.0}, {"vx": 2.294730584078581, "vy": 1.2615388141262325, "life": 1.0}, {"vx": 2.2653449717122434, "vy": 1.645869462552046, "life": 1.0}, {"vx": 2.6836424753763084, "vy": 2.5201080276451338, "life": 1.0}, {"vx": 1.4994824676956815, "vy": 1.8125629365238636, "life": 1.0}, {"vx": 1.5159773812044652, "vy": 2.3887981141938166, "life": 1.0}, {"vx": 2.6721993715592767, "vy": 5.67871272480616, "life": 1.0}, {"vx": 1.0012851872533475, "vy": 3.0816389368270682, "life": 1.0}, {"vx": 0.7257387864179226, "vy": 3.8044559503370334, "life": 1.0}, {"vx": 0.22355334941668456, "vy": 3.5532787372997734, "life": 1.0}, {"vx": -0.42584903614828384, "vy": 6.768676601775712, "life": 1.0}, {"vx": -1.012864277041559, "vy": 5.3096204830033304, "life": 1.0}, {"vx": -1.984001840997365, "vy": 6.106129803762991, "life": 1.0}, {"vx": -1.6803029572556143, "vy": 3.570825547844123, "life": 1.0}, {"vx": -2.6644745425097383, "vy": 4.198540058300668, "life": 1.0}, {"vx": -2.9869339925446807, "vy": 3.6105829613664424, "life": 1.0}, {"vx": -2.1781596457750076, "vy": 2.045428055032021, "life": 1.0}, {"vx": -5.110829590384165, "vy": 3.7132350508023153, "life": 1.0}, {"vx": -4.649976801437018, "vy": 2.556346379178457, "life": 1.0}, {"vx": -5.500036667851555, "vy": 2.177618566216921, "life": 1.0}, {"vx": -5.1740030721174906, "vy": 1.3284581973283265, "life": 1.0}, {"vx": -6.3672012405276055, "vy": 0.8043645751571432, "life": 1.0}, {"vx": -3.0508385739259856, "vy": 3.736199694273734e-16, "life": 1.0}, {"vx": -5.588948554327011, "vy": -0.7060483970354063, "life": 1.0}, {"vx": -6.732559800768705, "vy": -1.7286275504034387, "life": 1.0}, {"vx": -6.152312158579178, "vy": -2.435872702448264, "life": 1.0}, {"vx": -2.7230520783718095, "vy": -1.4970105482480944, "life": 1.0}, {"vx": -1.6890254851398268, "vy": -1.2271488458389694, "life": 1.0}, {"vx": -4.75942722325789, "vy": -4.46939965452854, "life": 1.0}, {"vx": -1.5409309687127573, "vy": -1.8626655674892505, "life": 1.0}, {"vx": -2.8267754187845178, "vy": -4.454285316761695, "life": 1.0}, {"vx": -2.2990887896092143, "vy": -4.885812377612649, "life": 1.0}, {"vx": -0.8831405120326881, "vy": -2.7180270148955263, "life": 1.0}, {"vx": -1.213127787466023, "vy": -6.359438569246541, "life": 1.0}, {"vx": -0.14977814497715325, "vy": -2.380655441970328, "life": 1.0}, {"vx": 0.43351398377155975, "vy": -6.890507455499812, "life": 1.0}, {"vx": 1.0017854431867057, "vy": -5.251543202071546, "life": 1.0}, {"vx": 1.7008079347425424, "vy": -5.234548580654169, "life": 1.0}, {"vx": 2.7020270902031602, "vy": -5.742099853482924, "life": 1.0}, {"vx": 2.370071419122447, "vy": -3.7346349666550576, "life": 1.0}, {"vx": 3.5126038246682447, "vy": -4.246008633278515, "life": 1.0}, {"vx": 3.222127359614005, "vy": -3.0257789923822305, "life": 1.0}, {"vx": 2.534778930810772, "vy": -1.8416246923259851, "life": 1.0}, {"vx": 3.414474092877921, "vy": -1.87712301735133, "life": 1.0}, {"vx": 2.819057095114042, "vy": -1.1161436623555905, "life": 1.0}, {"vx": 5.240773788817185, "vy": -1.345602003527285, "life": 1.0}, {"vx": 4.860360064683027, "vy": -0.614006265995695, "life": 1.0}]}, {"x": 583, "y": 166, "color": "#98D8C8", "particles": [{"vx": 3.757499299089422, "vy": 0.0, "life": 1.0}, {"vx": 4.877029127814886, "vy": 0.6161120583804197, "life": 1.0}, {"vx": 5.873972057930347, "vy": 1.508179686495922, "life": 1.0}, {"vx": 4.2174487050300185, "vy": 1.669806067989063, "life": 1.0}, {"vx": 5.780072603677704, "vy": 3.1776218038837953, "life": 1.0}, {"vx": 1.8182917649701584, "vy": 1.3210662955727484, "life": 1.0}, {"vx": 1.8335984780128174, "vy": 1.7218635814258563, "life": 1.0}, {"vx": 2.765992426008567, "vy": 3.3435104858500724, "life": 1.0}, {"vx": 3.5757459015843396, "vy": 5.634473952213199, "life": 1.0}, {"vx": 2.9210545707050004, "vy": 6.2075569424434, "life": 1.0}, {"vx": 0.9057253935128922, "vy": 2.787536132816206, "life": 1.0}, {"vx": 0.886790000550412, "vy": 4.648715980780712, "life": 1.0}, {"vx": 0.15489325525365868, "vy": 2.461957791641547, "life": 1.0}, {"vx": -0.14819461209480392, "vy": 2.3554859075600834, "life": 1.0}, {"vx": -0.5569653070158668, "vy": 2.919714387688237, "life": 1.0}, {"vx": -1.018710373377568, "vy": 3.1352681452938, "life": 1.0}, {"vx": -1.6816410898484826, "vy": 3.5736692243539956, "life": 1.0}, {"vx": -2.8368106244679536, "vy": 4.470098270641708, "life": 1.0}, {"vx": -3.8733180483065515, "vy": 4.682037227496436, "life": 1.0}, {"vx": -4.101991202094832, "vy": 3.8520261370804825, "life": 1.0}, {"vx": -2.1918992400279644, "vy": 1.5925080149829471, "life": 1.0}, {"vx": -3.767702034324349, "vy": 2.0713117214459746, "life": 1.0}, {"vx": -3.935243293181791, "vy": 1.5580730412040547, "life": 1.0}, {"vx": -6.523645270919126, "vy": 1.6749874160913312, "life": 1.0}, {"vx": -4.659073596585512, "vy": 0.5885778715913229, "life": 1.0}, {"vx": -5.560041285894079, "vy": 6.809086763897318e-16, "life": 1.0}, {"vx": -4.283319663155166, "vy": -0.5411091107323858, "life": 1.0}, {"vx": -4.660655840835871, "vy": -1.1966530306196046, "life": 1.0}, {"vx": -5.35696071643387, "vy": -2.1209707896652765, "life": 1.0}, {"vx": -2.6136612496224796, "vy": -1.4368724312359276, "life": 1.0}, {"vx": -1.787334309171799, "vy": -1.2985743873763926, "life": 1.0}, {"vx": -4.704477772975985, "vy": -4.417798686053521, "life": 1.0}, {"vx": -1.767115903263713, "vy": -2.136076186152344, "life": 1.0}, {"vx": -3.0529447273665418, "vy": -4.810671120750409, "life": 1.0}, {"vx": -2.4261343488604052, "vy": -5.155797933940683, "life": 1.0}, {"vx": -1.3149511953489588, "vy": -4.047003646114409, "life": 1.0}, {"vx": -0.7691271094595341, "vy": -4.031905504997807, "life": 1.0}, {"vx": -0.4348471617429501, "vy": -6.911697712550887, "life": 1.0}, {"vx": 0.4263328511431195, "vy": -6.776366620907322, "life": 1.0}, {"vx": 0.48095024721445967, "vy": -2.521229489279969, "life": 1.0}, {"vx": 0.6292133748415403, "vy": -1.9365196451202915, "life": 1.0}, {"vx": 1.4115584426434824, "vy": -2.999714383350724, "life": 1.0}, {"vx": 1.2105855818689182, "vy": -1.907577639938851, "life": 1.0}, {"vx": 3.8055613858504076, "vy": -4.600133492230169, "life": 1.0}, {"vx": 1.5853489254191286, "vy": -1.488741734499157, "life": 1.0}, {"vx": 4.831425775838355, "vy": -3.5102362970478618, "life": 1.0}, {"vx": 2.669381380963855, "vy": -1.4675048326616438, "life": 1.0}, {"vx": 3.437767140108785, "vy": -1.3611082984935077, "life": 1.0}, {"vx": 4.026965280219448, "vy": -1.033948948676351, "life": 1.0}, {"vx": 4.726144433027982, "vy": -0.5970508886709613, "life": 1.0}]}, {"x": 567, "y": 152, "color": "#FF1493", "particles": [{"vx": 2.7557352222868596, "vy": 0.0, "life": 1.0}, {"vx": 4.3118273539191, "vy": 0.5447104695875272, "life": 1.0}, {"vx": 2.430436422970512, "vy": 0.6240300100670657, "life": 1.0}, {"vx": 6.23921685161151, "vy": 2.4702807045157322, "life": 1.0}, {"vx": 5.501635840511397, "vy": 3.0245498979916214, "life": 1.0}, {"vx": 4.641303648076248, "vy": 3.3721044857138214, "life": 1.0}, {"vx": 4.457448343363921, "vy": 4.185822610871353, "life": 1.0}, {"vx": 1.7230598145599874, "vy": 2.0828215231383123, "life": 1.0}, {"vx": 2.66382088279039, "vy": 4.19751005539676, "life": 1.0}, {"vx": 1.2381356006111752, "vy": 2.6311720843357107, "life": 1.0}, {"vx": 1.7734821679934893, "vy": 5.458216871907438, "life": 1.0}, {"vx": 1.140680229525898, "vy": 5.9796551705210685, "life": 1.0}, {"vx": 0.20252465213019502, "vy": 3.219037165271598, "life": 1.0}, {"vx": -0.3143566903547952, "vy": 4.9965565118133695, "life": 1.0}, {"vx": -0.7716647543792763, "vy": 4.0452083055307755, "life": 1.0}, {"vx": -1.8038886330844848, "vy": 5.551798348941696, "life": 1.0}, {"vx": -2.3742141338704625, "vy": 5.045461860713468, "life": 1.0}, {"vx": -1.9140228816177782, "vy": 3.016017459640243, "life": 1.0}, {"vx": -3.4687889070795377, "vy": 4.193045496063454, "life": 1.0}, {"vx": -4.592359047135208, "vy": 4.312512194416422, "life": 1.0}, {"vx": -5.183988294351745, "vy": 3.7663879605285167, "life": 1.0}, {"vx": -3.2937498635950617, "vy": 1.8107543106706867, "life": 1.0}, {"vx": -2.44157372069306, "vy": 0.9666874215668473, "life": 1.0}, {"vx": -2.66763447054694, "vy": 0.6849321174491215, "life": 1.0}, {"vx": -2.398588110768312, "vy": 0.3030121451815864, "life": 1.0}, {"vx": -6.457571690285979, "vy": 7.908244500773288e-16, "life": 1.0}, {"vx": -2.3542794077021054, "vy": -0.29741465426347874, "life": 1.0}, {"vx": -5.557621460854755, "vy": -1.4269546585906343, "life": 1.0}, {"vx": -3.6254031741187323, "vy": -1.4353986598177677, "life": 1.0}, {"vx": -3.1157693791246244, "vy": -1.7129087113335417, "life": 1.0}, {"vx": -2.494876912374311, "vy": -1.8126341789786389, "life": 1.0}, {"vx": -1.7070420270377094, "vy": -1.6030191634458015, "life": 1.0}, {"vx": -1.4056646140223328, "vy": -1.6991566326716723, "life": 1.0}, {"vx": -1.8449573695286283, "vy": -2.9071876267681303, "life": 1.0}, {"vx": -2.068668841827428, "vy": -4.396145063323118, "life": 1.0}, {"vx": -1.120829322611712, "vy": -3.4495579541853556, "life": 1.0}, {"vx": -1.1459165541838672, "vy": -6.007104945668457, "life": 1.0}, {"vx": -0.16984420476435189, "vy": -2.6995963290976395, "life": 1.0}, {"vx": 0.22905586888451207, "vy": -3.6407387797354396, "life": 1.0}, {"vx": 0.9713977923535039, "vy": -5.092245557805135, "life": 1.0}, {"vx": 1.1207200511924367, "vy": -3.449221651337172, "life": 1.0}, {"vx": 2.060529860691799, "vy": -4.378848847990625, "life": 1.0}, {"vx": 3.0576189635682405, "vy": -4.818036538442217, "life": 1.0}, {"vx": 1.4613346344399245, "vy": -1.7664501274996054, "life": 1.0}, {"vx": 2.9596352518076428, "vy": -2.7792824958682725, "life": 1.0}, {"vx": 5.405392146144293, "vy": -3.92724727472, "life": 1.0}, {"vx": 5.953285321456124, "vy": -3.272846301301442, "life": 1.0}, {"vx": 3.9958114504918885, "vy": -1.5820536711243873, "life": 1.0}, {"vx": 6.592813883077947, "vy": -1.6927468972009176, "life": 1.0}, {"vx": 2.4161612815655706, "vy": -0.3052321529257317, "life": 1.0}]}, {"x": 296, "y": 137, "color": "#45B7D1", "particles": [{"vx": 3.9626941831321205, "vy": 0.0, "life": 1.0}, {"vx": 2.6736263844457424, "vy": 0.33775755934414614, "life": 1.0}, {"vx": 4.9162087233352025, "vy": 1.2622678586116154, "life": 1.0}, {"vx": 6.50779117983928, "vy": 2.576616803505139, "life": 1.0}, {"vx": 5.048390860776285, "vy": 2.775376361799226, "life": 1.0}, {"vx": 1.66580939205279, "vy": 1.2102813668771075, "life": 1.0}, {"vx": 3.0764126763700466, "vy": 2.888943796800754, "life": 1.0}, {"vx": 3.275002134928431, "vy": 3.9587975282766257, "life": 1.0}, {"vx": 2.6528460857003138, "vy": 4.180216542368482, "life": 1.0}, {"vx": 2.1939026244139006, "vy": 4.662280398253017, "life": 1.0}, {"vx": 0.9705627139430382, "vy": 2.987084886498623, "life": 1.0}, {"vx": 0.5805175830342001, "vy": 3.043179742329387, "life": 1.0}, {"vx": 0.2875378908465153, "vy": 4.570283900370373, "life": 1.0}, {"vx": -0.2596430250620194, "vy": 4.126907705245109, "life": 1.0}, {"vx": -1.1891515626954718, "vy": 6.23375079741728, "life": 1.0}, {"vx": -1.586846602674187, "vy": 4.883811665072831, "life": 1.0}, {"vx": -2.161027080717197, "vy": 4.592416311646165, "life": 1.0}, {"vx": -1.505218296772423, "vy": 2.3718445099248022, "life": 1.0}, {"vx": -3.7742391330002456, "vy": 4.562271392587292, "life": 1.0}, {"vx": -3.5255263070503435, "vy": 3.3106895682241873, "life": 1.0}, {"vx": -2.4734588482660396, "vy": 1.7970730445364371, "life": 1.0}, {"vx": -2.9043704698557415, "vy": 1.5966911774944952, "life": 1.0}, {"vx": -2.667459135825591, "vy": 1.056121784196717, "life": 1.0}, {"vx": -1.9690419155304435, "vy": 0.5055640356430946, "life": 1.0}, {"vx": -4.4811854259467, "vy": 0.5661053695616065, "life": 1.0}, {"vx": -3.0985989878313855, "vy": 3.794689332288935e-16, "life": 1.0}, {"vx": -5.78369162348435, "vy": -0.7306501679187404, "life": 1.0}, {"vx": -6.1760278553431665, "vy": -1.5857344336676074, "life": 1.0}, {"vx": -1.9245596522330801, "vy": -0.7619870709210782, "life": 1.0}, {"vx": -3.618655763699628, "vy": -1.9893728407780524, "life": 1.0}, {"vx": -5.342426200714086, "vy": -3.881499837548883, "life": 1.0}, {"vx": -3.7975489439979766, "vy": -3.566135827315309, "life": 1.0}, {"vx": -1.46947863679073, "vy": -1.7762945352429758, "life": 1.0}, {"vx": -2.390118163930864, "vy": -3.766223581886264, "life": 1.0}, {"vx": -2.3001848277357078, "vy": -4.888141577193353, "life": 1.0}, {"vx": -0.8876632005759869, "vy": -2.7319464189690086, "life": 1.0}, {"vx": -0.5046971221775185, "vy": -2.6457149673140585, "life": 1.0}, {"vx": -0.4189912081004506, "vy": -6.659674546337929, "life": 1.0}, {"vx": 0.21793584886680772, "vy": -3.463991122899357, "life": 1.0}, {"vx": 0.48198004330429034, "vy": -2.5266278694339737, "life": 1.0}, {"vx": 1.8446458120097793, "vy": -5.677236047541779, "life": 1.0}, {"vx": 2.197525426814356, "vy": -4.669979245243969, "life": 1.0}, {"vx": 3.493053407840391, "vy": -5.504171432160698, "life": 1.0}, {"vx": 1.9731072188533356, "vy": -2.385076912687893, "life": 1.0}, {"vx": 4.2906991936419585, "vy": -4.029234736490515, "life": 1.0}, {"vx": 4.338583779495112, "vy": -3.152165627117433, "life": 1.0}, {"vx": 5.931484193162433, "vy": -3.2608610295989338, "life": 1.0}, {"vx": 3.395305866067965, "vy": -1.3442966908115115, "life": 1.0}, {"vx": 2.786275012362178, "vy": -0.7153938311576574, "life": 1.0}, {"vx": 3.355888445811915, "vy": -0.42394730149389664, "life": 1.0}]}, {"x": 487, "y": 255, "color": "#00FA9A", "particles": [{"vx": 6.472697221795327, "vy": 0.0, "life": 1.0}, {"vx": 6.106944355773926, "vy": 0.7714864846698887, "life": 1.0}, {"vx": 6.566652410083411, "vy": 1.686029772612978, "life": 1.0}, {"vx": 5.5212282223681175, "vy": 2.186008896199991, "life": 1.0}, {"vx": 6.059745377270302, "vy": 3.3313732122579816, "life": 1.0}, {"vx": 3.319120800642821, "vy": 2.4114824172542124, "life": 1.0}, {"vx": 1.9319381988789028, "vy": 1.814210726123755, "life": 1.0}, {"vx": 2.3964142241863415, "vy": 2.8967671826092274, "life": 1.0}, {"vx": 1.7155449429936627, "vy": 2.703266272602306, "life": 1.0}, {"vx": 2.8847096306482976, "vy": 6.130320013275993, "life": 1.0}, {"vx": 1.2660853630912383, "vy": 3.8966100786444566, "life": 1.0}, {"vx": 0.4955831419361623, "vy": 2.5979378097342294, "life": 1.0}, {"vx": 0.20334738345078787, "vy": 3.2321141051412137, "life": 1.0}, {"vx": -0.1898087547024504, "vy": 3.016923763376326, "life": 1.0}, {"vx": -1.133084539860614, "vy": 5.93983717087049, "life": 1.0}, {"vx": -1.3383546625530447, "vy": 4.119032111841252, "life": 1.0}, {"vx": -1.181676215760907, "vy": 2.511189784138977, "life": 1.0}, {"vx": -1.7423319706108922, "vy": 2.745475874045074, "life": 1.0}, {"vx": -2.217634758468104, "vy": 2.6806599320387057, "life": 1.0}, {"vx": -1.5947669535473266, "vy": 1.4975858515930816, "life": 1.0}, {"vx": -2.4879149530775115, "vy": 1.8075760194712747, "life": 1.0}, {"vx": -4.726162234172036, "vy": 2.5982296752538523, "life": 1.0}, {"vx": -4.691873486007672, "vy": 1.8576441268458417, "life": 1.0}, {"vx": -5.22175819527606, "vy": 1.3407196289394332, "life": 1.0}, {"vx": -2.004354127716018, "vy": 0.2532088111402565, "life": 1.0}, {"vx": -5.561625211678191, "vy": 6.811026513538917e-16, "life": 1.0}, {"vx": -6.325742858435073, "vy": -0.7991271635160108, "life": 1.0}, {"vx": -3.753881264023255, "vy": -0.9638328906032116, "life": 1.0}, {"vx": -5.116126018698692, "vy": -2.025617587341586, "life": 1.0}, {"vx": -3.0877666366897376, "vy": -1.6975140734058067, "life": 1.0}, {"vx": -5.476582631257553, "vy": -3.978970189744109, "life": 1.0}, {"vx": -4.341330636830015, "vy": -4.076780826403841, "life": 1.0}, {"vx": -2.9176689841992602, "vy": -3.5268559491274423, "life": 1.0}, {"vx": -2.6603848892453783, "vy": -4.192095795921345, "life": 1.0}, {"vx": -0.9097627847234688, "vy": -1.9333443294501031, "life": 1.0}, {"vx": -1.7519774370256675, "vy": -5.392032115436389, "life": 1.0}, {"vx": -0.6052186281657556, "vy": -3.1726671555543646, "life": 1.0}, {"vx": -0.1791613256261064, "vy": -2.84768772445051, "life": 1.0}, {"vx": 0.2109872165947848, "vy": -3.3535457756481577, "life": 1.0}, {"vx": 1.131757651585308, "vy": -5.932881378939721, "life": 1.0}, {"vx": 1.4256738981775825, "vy": -4.3877730858016175, "life": 1.0}, {"vx": 2.842645486673726, "vy": -6.040929157118784, "life": 1.0}, {"vx": 3.4664109148886624, "vy": -5.462189580907782, "life": 1.0}, {"vx": 2.8011458793309867, "vy": -3.386003711316698, "life": 1.0}, {"vx": 3.2805194064672056, "vy": -3.0806127742200093, "life": 1.0}, {"vx": 1.6908097724184858, "vy": -1.2284452064290963, "life": 1.0}, {"vx": 3.1290987450693106, "vy": -1.720236592272416, "life": 1.0}, {"vx": 3.3652794042491605, "vy": -1.3324083735723513, "life": 1.0}, {"vx": 2.7135819204594895, "vy": -0.6967294174568465, "life": 1.0}, {"vx": 2.2376842954863134, "vy": -0.28268526620740436, "life": 1.0}]}, {"x": 363, "y": 299, "color": "#00CED1", "particles": [{"vx": 3.0354863661437417, "vy": 0.0, "life": 1.0}, {"vx": 3.403282157250476, "vy": 0.4299345196021828, "life": 1.0}, {"vx": 6.135927978776601, "vy": 1.5754385353091824, "life": 1.0}, {"vx": 3.0358924114811128, "vy": 1.201994837401829, "life": 1.0}, {"vx": 4.941218125262751, "vy": 2.7164576518624357, "life": 1.0}, {"vx": 2.786921629775634, "vy": 2.0248170862500094, "life": 1.0}, {"vx": 4.228885583923615, "vy": 3.9711878932547786, "life": 1.0}, {"vx": 2.8095073139112343, "vy": 3.3961109494757484, "life": 1.0}, {"vx": 2.5609135299498313, "vy": 4.035354014383212, "life": 1.0}, {"vx": 1.0025125083124482, "vy": 2.130447525107112, "life": 1.0}, {"vx": 0.7283361157832354, "vy": 2.2415880730762328, "life": 1.0}, {"vx": 0.6640887226205324, "vy": 3.4812749981237756, "life": 1.0}, {"vx": 0.17658742948857542, "vy": 2.806776816869058, "life": 1.0}, {"vx": -0.3271853386091962, "vy": 5.20046203677912, "life": 1.0}, {"vx": -0.8745774290721133, "vy": 4.584695439094007, "life": 1.0}, {"vx": -1.6383573123843984, "vy": 5.042345328336163, "life": 1.0}, {"vx": -1.843648549995027, "vy": 3.9179526020238566, "life": 1.0}, {"vx": -1.0788033325732955, "vy": 1.6999220426294184, "life": 1.0}, {"vx": -3.0732152918858944, "vy": 3.7148791359935034, "life": 1.0}, {"vx": -1.5144787258457135, "vy": 1.4221901872999594, "life": 1.0}, {"vx": -3.265060456081726, "vy": 2.3722052778519545, "life": 1.0}, {"vx": -4.005214038267415, "vy": 2.2018850505653025, "life": 1.0}, {"vx": -5.026612462087505, "vy": 1.9901766631121183, "life": 1.0}, {"vx": -6.015139684860443, "vy": 1.5444253725882453, "life": 1.0}, {"vx": -6.942700424564653, "vy": 0.8770670293727861, "life": 1.0}, {"vx": -2.219464995707927, "vy": 2.718060702813307e-16, "life": 1.0}, {"vx": -3.853490204436428, "vy": -0.4868090223746204, "life": 1.0}, {"vx": -2.421450618352096, "vy": -0.621722847578265, "life": 1.0}, {"vx": -4.366374079596915, "vy": -1.7287697950007894, "life": 1.0}, {"vx": -4.960249151319285, "vy": -2.7269200469730173, "life": 1.0}, {"vx": -2.8394436141296575, "vy": -2.0629765415384376, "life": 1.0}, {"vx": -3.064736662287475, "vy": -2.8779792897584118, "life": 1.0}, {"vx": -1.3283981237564058, "vy": -1.6057574902952212, "life": 1.0}, {"vx": -2.0643509816773213, "vy": -3.252896641602226, "life": 1.0}, {"vx": -2.4566563657087697, "vy": -5.2206605214063835, "life": 1.0}, {"vx": -0.7423657347133791, "vy": -2.2847668002903774, "life": 1.0}, {"vx": -0.6074919877497902, "vy": -3.1845845238397574, "life": 1.0}, {"vx": -0.43706654091191394, "vy": -6.946973734277524, "life": 1.0}, {"vx": 0.22480572173137803, "vy": -3.5731846252169235, "life": 1.0}, {"vx": 0.4284419834878135, "vy": -2.245971531299383, "life": 1.0}, {"vx": 1.4863500048842757, "vy": -4.574514940512696, "life": 1.0}, {"vx": 1.3180080760852206, "vy": -2.8009097347759093, "life": 1.0}, {"vx": 1.8038511863928166, "vy": -2.8424146466603917, "life": 1.0}, {"vx": 2.596039816809155, "vy": -3.1380730719176735, "life": 1.0}, {"vx": 1.9496005870332236, "vy": -1.8307968126026746, "life": 1.0}, {"vx": 3.1300235395070013, "vy": -2.2740952151097056, "life": 1.0}, {"vx": 4.403939754396878, "vy": -2.421086367956374, "life": 1.0}, {"vx": 3.1582096965080217, "vy": -1.2504236765040764, "life": 1.0}, {"vx": 2.8209298722528993, "vy": -0.7242916868522526, "life": 1.0}, {"vx": 5.681532573466173, "vy": -0.7177444786273014, "life": 1.0}]}, {"x": 138, "y": 232, "color": "#FF6B6B", "particles": [{"vx": 5.939177263891372, "vy": 0.0, "life": 1.0}, {"vx": 2.4496992030451588, "vy": 0.3094689777006215, "life": 1.0}, {"vx": 2.9061916747164274, "vy": 0.7461831969311785, "life": 1.0}, {"vx": 3.052192474492401, "vy": 1.208448488893166, "life": 1.0}, {"vx": 2.1664601327893203, "vy": 1.1910215367910955, "life": 1.0}, {"vx": 5.532503884651527, "vy": 4.0195993585542, "life": 1.0}, {"vx": 2.8459074075780757, "vy": 2.672484941484831, "life": 1.0}, {"vx": 3.6304819088185263, "vy": 4.388498759680311, "life": 1.0}, {"vx": 2.5142759455071655, "vy": 3.961864940503573, "life": 1.0}, {"vx": 1.3088960920243788, "vy": 2.7815457829745296, "life": 1.0}, {"vx": 2.0117489261937482, "vy": 6.1915265510764925, "life": 1.0}, {"vx": 0.888339552863477, "vy": 4.6568390184743365, "life": 1.0}, {"vx": 0.19265915578293125, "vy": 3.062229591173025, "life": 1.0}, {"vx": -0.2983837059221379, "vy": 4.742673194458137, "life": 1.0}, {"vx": -1.0825158341899965, "vy": 5.6747467322858345, "life": 1.0}, {"vx": -0.8073399671305128, "vy": 2.484736925741192, "life": 1.0}, {"vx": -1.94032684054695, "vy": 4.123404427442615, "life": 1.0}, {"vx": -2.429634421396552, "vy": 3.828491240021786, "life": 1.0}, {"vx": -2.3870910456545373, "vy": 2.8854973957184797, "life": 1.0}, {"vx": -4.122100250158842, "vy": 3.870909790145076, "life": 1.0}, {"vx": -5.42537756768295, "vy": 3.941767533407947, "life": 1.0}, {"vx": -3.668280212341817, "vy": 2.016654112281596, "life": 1.0}, {"vx": -4.430522251578684, "vy": 1.754167853001546, "life": 1.0}, {"vx": -3.9750065080851242, "vy": 1.0206082034539654, "life": 1.0}, {"vx": -4.577639940593838, "vy": 0.5782904084453006, "life": 1.0}, {"vx": -6.910563230305339, "vy": 8.462999140298827e-16, "life": 1.0}, {"vx": -5.606962212237205, "vy": -0.708324051242742, "life": 1.0}, {"vx": -5.842948981202678, "vy": -1.5002143142279154, "life": 1.0}, {"vx": -5.308607694598341, "vy": -2.1018264740105823, "life": 1.0}, {"vx": -5.535725783742281, "vy": -3.0432910028757885, "life": 1.0}, {"vx": -4.870882290174523, "vy": -3.5389031327199354, "life": 1.0}, {"vx": -2.8191804317465907, "vy": -2.6473866405875914, "life": 1.0}, {"vx": -4.220065005802705, "vy": -5.101182297245595, "life": 1.0}, {"vx": -3.1127018099365302, "vy": -4.904833215728038, "life": 1.0}, {"vx": -1.600840593303712, "vy": -3.4019594287515487, "life": 1.0}, {"vx": -0.8789894181512047, "vy": -2.7052512615952162, "life": 1.0}, {"vx": -0.47982846751372304, "vy": -2.5153489141511365, "life": 1.0}, {"vx": -0.23332179157256927, "vy": -3.708543679201206, "life": 1.0}, {"vx": 0.132365092674088, "vy": -2.1038829012706963, "life": 1.0}, {"vx": 0.41731718160520925, "vy": -2.187653277527258, "life": 1.0}, {"vx": 0.7251065973633374, "vy": -2.2316486374023103, "life": 1.0}, {"vx": 2.741523089023361, "vy": -5.82603312338274, "life": 1.0}, {"vx": 2.016839491826134, "vy": -3.178030513145291, "life": 1.0}, {"vx": 1.3028751122131712, "vy": -1.574905469182344, "life": 1.0}, {"vx": 3.427382711523662, "vy": -3.218526597478964, "life": 1.0}, {"vx": 2.149740051503797, "vy": -1.5618775715739444, "life": 1.0}, {"vx": 4.9293901138592275, "vy": -2.709955147567165, "life": 1.0}, {"vx": 2.1275629973925616, "vy": -0.8423617811493481, "life": 1.0}, {"vx": 3.225232205232227, "vy": -0.8280988823562058, "life": 1.0}, {"vx": 3.7871004788610954, "vy": -0.47842204960748236, "life": 1.0}]}, {"x": 468, "y": 156, "color": "#4ECDC4", "particles": [{"vx": 5.511452813943289, "vy": 0.0, "life": 1.0}, {"vx": 4.161730993398504, "vy": 0.5257488896559374, "life": 1.0}, {"vx": 2.090527803584368, "vy": 0.5367563100958604, "life": 1.0}, {"vx": 2.3665991848062657, "vy": 0.937002902862655, "life": 1.0}, {"vx": 5.049849882376502, "vy": 2.776178465711595, "life": 1.0}, {"vx": 3.088388076541177, "vy": 2.2438452805918407, "life": 1.0}, {"vx": 2.818531011719793, "vy": 2.6467767945899, "life": 1.0}, {"vx": 1.6133300185983253, "vy": 1.950180985167848, "life": 1.0}, {"vx": 1.320544613368301, "vy": 2.0808453485082303, "life": 1.0}, {"vx": 1.3815351907841849, "vy": 2.935911725439767, "life": 1.0}, {"vx": 0.7719004431007324, "vy": 2.375665286069407, "life": 1.0}, {"vx": 0.6299432980588175, "vy": 3.3022784141162154, "life": 1.0}, {"vx": 0.14956171097079812, "vy": 2.3772153219505663, "life": 1.0}, {"vx": -0.2532522326002466, "vy": 4.025328967873624, "life": 1.0}, {"vx": -0.4171231304675357, "vy": 2.1866360258394453, "life": 1.0}, {"vx": -0.6777428654463191, "vy": 2.0858780594221216, "life": 1.0}, {"vx": -2.117137269938768, "vy": 4.499145716042601, "life": 1.0}, {"vx": -1.2183127940095826, "vy": 1.9197537779330265, "life": 1.0}, {"vx": -4.025971635859989, "vy": 4.866563716393615, "life": 1.0}, {"vx": -1.8191344075921965, "vy": 1.7082809152123484, "life": 1.0}, {"vx": -3.82017887471881, "vy": 2.77552241707088, "life": 1.0}, {"vx": -4.6573603839264806, "vy": 2.560405538001888, "life": 1.0}, {"vx": -4.890991839926832, "vy": 1.9364806602281346, "life": 1.0}, {"vx": -4.379525054005522, "vy": 1.1244709130057322, "life": 1.0}, {"vx": -5.683797666624173, "vy": 0.7180306264380735, "life": 1.0}, {"vx": -3.2306352165352368, "vy": 3.956387077142594e-16, "life": 1.0}, {"vx": -5.0288896933045395, "vy": -0.6352965092292021, "life": 1.0}, {"vx": -2.409280171516424, "vy": -0.618598007944689, "life": 1.0}, {"vx": -6.068335179570033, "vy": -2.402623864364325, "life": 1.0}, {"vx": -5.707898656191402, "vy": -3.1379438404860847, "life": 1.0}, {"vx": -2.469349330220883, "vy": -1.794087304907023, "life": 1.0}, {"vx": -4.997846061219992, "vy": -4.693289845939327, "life": 1.0}, {"vx": -3.801101335859743, "vy": -4.5947422179190065, "life": 1.0}, {"vx": -1.1748411007782371, "vy": -1.851253350354523, "life": 1.0}, {"vx": -1.8340871567585855, "vy": -3.8976336071103312, "life": 1.0}, {"vx": -1.5366092232314372, "vy": -4.729196909411046, "life": 1.0}, {"vx": -0.6115021836096702, "vy": -3.205606706733468, "life": 1.0}, {"vx": -0.2010276972281613, "vy": -3.195243748451995, "life": 1.0}, {"vx": 0.19770187802535444, "vy": -3.1423813659904116, "life": 1.0}, {"vx": 0.9147603358907347, "vy": -4.7953416134599935, "life": 1.0}, {"vx": 0.7904034605864076, "vy": -2.4326117183731375, "life": 1.0}, {"vx": 0.9299242919362747, "vy": -1.9761897132112067, "life": 1.0}, {"vx": 3.5400408818545936, "vy": -5.57821184378391, "life": 1.0}, {"vx": 2.5608132254476392, "vy": -3.0954914377488674, "life": 1.0}, {"vx": 1.552480809528296, "vy": -1.457876519229212, "life": 1.0}, {"vx": 4.102440115583797, "vy": -2.9805972125668583, "life": 1.0}, {"vx": 2.6564403473900686, "vy": -1.4603904392502718, "life": 1.0}, {"vx": 3.706106155494687, "vy": -1.4673512305379888, "life": 1.0}, {"vx": 3.345524721535484, "vy": -0.8589847510217056, "life": 1.0}, {"vx": 4.1572382193666835, "vy": -0.5251813203050003, "life": 1.0}]}, {"x": 633, "y": 186, "color": "#FFA07A", "particles": [{"vx": 3.932528449328524, "vy": 0.0, "life": 1.0}, {"vx": 2.6315734432267557, "vy": 0.3324450374181208, "life": 1.0}, {"vx": 2.9807892184536735, "vy": 0.7653365907535261, "life": 1.0}, {"vx": 3.8125969317251034, "vy": 1.5095139115262217, "life": 1.0}, {"vx": 1.912271402494899, "vy": 1.051280099776764, "life": 1.0}, {"vx": 4.09498749316265, "vy": 2.975182565432727, "life": 1.0}, {"vx": 3.388267192549104, "vy": 3.1817946802143613, "life": 1.0}, {"vx": 1.6807082484456464, "vy": 2.0316272739914303, "life": 1.0}, {"vx": 3.1440703989012553, "vy": 4.954262202659437, "life": 1.0}, {"vx": 1.8188041354496616, "vy": 3.8651555336161962, "life": 1.0}, {"vx": 1.962219583064466, "vy": 6.039090907120396, "life": 1.0}, {"vx": 1.1793898352233239, "vy": 6.18257802993948, "life": 1.0}, {"vx": 0.3438864163193407, "vy": 5.465918065383881, "life": 1.0}, {"vx": -0.3234803517827661, "vy": 5.141572957520498, "life": 1.0}, {"vx": -1.0829876374974072, "vy": 5.677220011837458, "life": 1.0}, {"vx": -1.9392446961948353, "vy": 5.968381476033277, "life": 1.0}, {"vx": -1.3331142398893263, "vy": 2.8330119669410587, "life": 1.0}, {"vx": -2.0047780973700875, "vy": 3.159024796642937, "life": 1.0}, {"vx": -2.598474787309761, "vy": 3.141016445632275, "life": 1.0}, {"vx": -4.971433038133152, "vy": 4.668486366293189, "life": 1.0}, {"vx": -2.3881636772198402, "vy": 1.7351024753378819, "life": 1.0}, {"vx": -3.8932136035419878, "vy": 2.1403122905273864, "life": 1.0}, {"vx": -5.138921039519909, "vy": 2.034642774545835, "life": 1.0}, {"vx": -2.0985869067181078, "vy": 0.5388255360843085, "life": 1.0}, {"vx": -3.7677073005640462, "vy": 0.47597212144712114, "life": 1.0}, {"vx": -3.407545715093999, "vy": 4.1730399529381447e-16, "life": 1.0}, {"vx": -3.645512678254103, "vy": -0.46053535076124813, "life": 1.0}, {"vx": -2.87027769867156, "vy": -0.7369620551555638, "life": 1.0}, {"vx": -4.973872427964587, "vy": -1.9692954064179062, "life": 1.0}, {"vx": -5.380530199173838, "vy": -2.95797150825951, "life": 1.0}, {"vx": -5.204899035040254, "vy": -3.781580502930805, "life": 1.0}, {"vx": -2.5978406874225906, "vy": -2.439534785645693, "life": 1.0}, {"vx": -1.3913587717836482, "vy": -1.681863840007384, "life": 1.0}, {"vx": -3.0698011813983346, "vy": -4.837232642117666, "life": 1.0}, {"vx": -1.4412271710882745, "vy": -3.062763640655931, "life": 1.0}, {"vx": -2.139214216853759, "vy": -6.583824377702062, "life": 1.0}, {"vx": -0.503101791762847, "vy": -2.637351952407817, "life": 1.0}, {"vx": -0.2572899920029524, "vy": -4.089507315768683, "life": 1.0}, {"vx": 0.4213255750448865, "vy": -6.696778246418343, "life": 1.0}, {"vx": 1.2009375438611158, "vy": -6.29553507437114, "life": 1.0}, {"vx": 0.7097262904257292, "vy": -2.184312919943731, "life": 1.0}, {"vx": 2.3923443992241133, "vy": -5.083990635798034, "life": 1.0}, {"vx": 2.147558641933247, "vy": -3.384010934183495, "life": 1.0}, {"vx": 2.4599238565033685, "vy": -2.97353714033138, "life": 1.0}, {"vx": 4.405452114710353, "vy": -4.136994902098878, "life": 1.0}, {"vx": 4.3003754302935375, "vy": -3.1244056364976096, "life": 1.0}, {"vx": 3.8135760457287216, "vy": -2.0965311726302773, "life": 1.0}, {"vx": 5.852619766676686, "vy": -2.3172160904704837, "life": 1.0}, {"vx": 6.479330482356458, "vy": -1.6636093122695157, "life": 1.0}, {"vx": 3.558333100447259, "vy": -0.44952200888371674, "life": 1.0}]}, {"x": 616, "y": 169, "color": "#FFA07A", "particles": [{"vx": 4.591299670732507, "vy": 0.0, "life": 1.0}, {"vx": 2.0880069891620097, "vy": 0.2637766251319664, "life": 1.0}, {"vx": 3.3197034239698575, "vy": 0.8523549686387814, "life": 1.0}, {"vx": 5.505837874410474, "vy": 2.179915426378417, "life": 1.0}, {"vx": 2.9324003931880034, "vy": 1.612100758247013, "life": 1.0}, {"vx": 2.4998455030256923, "vy": 1.8162440713911197, "life": 1.0}, {"vx": 2.222186176433501, "vy": 2.086771719234635, "life": 1.0}, {"vx": 2.0678481333054988, "vy": 2.4995990053484767, "life": 1.0}, {"vx": 3.6585029533995934, "vy": 5.7648781995083995, "life": 1.0}, {"vx": 2.9206475996423547, "vy": 6.206692084911934, "life": 1.0}, {"vx": 1.08599852388047, "vy": 3.342359778343548, "life": 1.0}, {"vx": 1.1142691434003418, "vy": 5.841203408474312, "life": 1.0}, {"vx": 0.24720651753949308, "vy": 3.929235078727238, "life": 1.0}, {"vx": -0.2538870131559893, "vy": 4.035418515882891, "life": 1.0}, {"vx": -0.7029482273139929, "vy": 3.6849836555980278, "life": 1.0}, {"vx": -1.0959990429682038, "vy": 3.3731382113030777, "life": 1.0}, {"vx": -1.7879736862936362, "vy": 3.799637494132618, "life": 1.0}, {"vx": -1.2442284336548954, "vy": 1.960590291643847, "life": 1.0}, {"vx": -1.5829007552890915, "vy": 1.9133983244510464, "life": 1.0}, {"vx": -1.679411075959826, "vy": 1.5770719732884861, "life": 1.0}, {"vx": -2.8062465745038394, "vy": 2.038857480446404, "life": 1.0}, {"vx": -2.367576412328785, "vy": 1.3015861470996173, "life": 1.0}, {"vx": -6.073074002114802, "vy": 2.404500096938523, "life": 1.0}, {"vx": -4.751427607800093, "vy": 1.2199592591294892, "life": 1.0}, {"vx": -3.3922319008238975, "vy": 0.42853854757614407, "life": 1.0}, {"vx": -3.080079828431808, "vy": 3.7720099030073425e-16, "life": 1.0}, {"vx": -6.6807048789425005, "vy": -0.8439692949386888, "life": 1.0}, {"vx": -5.155577639371392, "vy": -1.3237273502782343, "life": 1.0}, {"vx": -5.523358765718735, "vy": -2.186852437986458, "life": 1.0}, {"vx": -4.209403445944006, "vy": -2.3141391273639957, "life": 1.0}, {"vx": -3.964684291680065, "vy": -2.8805117480203744, "life": 1.0}, {"vx": -4.8681150251569285, "vy": -4.571464294131647, "life": 1.0}, {"vx": -3.6265179101286327, "vy": -4.383707108386935, "life": 1.0}, {"vx": -1.9083639920045776, "vy": -3.0071004764424476, "life": 1.0}, {"vx": -0.9800145362100965, "vy": -2.0826369007129446, "life": 1.0}, {"vx": -1.6267902578938214, "vy": -5.006745595156897, "life": 1.0}, {"vx": -1.2934001567355728, "vy": -6.78024106544843, "life": 1.0}, {"vx": -0.20162698452467764, "vy": -3.204769147260833, "life": 1.0}, {"vx": 0.3010475607233782, "vy": -4.7850139540540395, "life": 1.0}, {"vx": 0.6656142897406553, "vy": -3.489272301032779, "life": 1.0}, {"vx": 1.9976637174392, "vy": -6.148176735974948, "life": 1.0}, {"vx": 2.0037171788928254, "vy": -4.258115753560646, "life": 1.0}, {"vx": 2.4944228802409163, "vy": -3.930581515396461, "life": 1.0}, {"vx": 3.1128072225733825, "vy": -3.7627375589464904, "life": 1.0}, {"vx": 2.6611297005493637, "vy": -2.4989671249032406, "life": 1.0}, {"vx": 3.4544053326940993, "vy": -2.509772383170772, "life": 1.0}, {"vx": 2.067303405630031, "vy": -1.1365096647390693, "life": 1.0}, {"vx": 3.1712764030570013, "vy": -1.2555971516095579, "life": 1.0}, {"vx": 5.122460446131265, "vy": -1.3152243002763087, "life": 1.0}, {"vx": 2.94284716118558, "vy": -0.37176805273446945, "life": 1.0}]}, {"x": 590, "y": 238, "color": "#FF69B4", "particles": [{"vx": 3.7318562292466746, "vy": 0.0, "life": 1.0}, {"vx": 2.9654776234393756, "vy": 0.37462694496493837, "life": 1.0}, {"vx": 5.269052048026462, "vy": 1.3528626264393913, "life": 1.0}, {"vx": 3.324783518222053, "vy": 1.3163749180531392, "life": 1.0}, {"vx": 2.004355251395812, "vy": 1.101903624101857, "life": 1.0}, {"vx": 4.896269299549626, "vy": 3.557347874689823, "life": 1.0}, {"vx": 4.003828335213821, "vy": 3.7598450693289687, "life": 1.0}, {"vx": 4.234681547438681, "vy": 5.118850660964603, "life": 1.0}, {"vx": 2.215407066273751, "vy": 3.490922943640291, "life": 1.0}, {"vx": 1.294605258867051, "vy": 2.7511762166306664, "life": 1.0}, {"vx": 1.1630893553715937, "vy": 3.5796209612909315, "life": 1.0}, {"vx": 1.1493676744067898, "vy": 6.025196351437504, "life": 1.0}, {"vx": 0.22319521296884834, "vy": 3.547586321469418, "life": 1.0}, {"vx": -0.3921748553802029, "vy": 6.2334408254770235, "life": 1.0}, {"vx": -1.24379111307105, "vy": 6.520181351275543, "life": 1.0}, {"vx": -1.9745582246891749, "vy": 6.077065341319875, "life": 1.0}, {"vx": -2.151615134364276, "vy": 4.572414907526255, "life": 1.0}, {"vx": -1.627263577367318, "vy": 2.5641570996414815, "life": 1.0}, {"vx": -3.453048866585949, "vy": 4.174019055519667, "life": 1.0}, {"vx": -2.8411232617453113, "vy": 2.6679923295109202, "life": 1.0}, {"vx": -4.339887231217623, "vy": 3.153112640227039, "life": 1.0}, {"vx": -3.5480767994607176, "vy": 1.9505717268407634, "life": 1.0}, {"vx": -5.055505797179243, "vy": 2.001616343742515, "life": 1.0}, {"vx": -6.355288263277894, "vy": 1.6317606835669667, "life": 1.0}, {"vx": -3.1656220422354537, "vy": 0.3999110649909054, "life": 1.0}, {"vx": -3.6102404258633958, "vy": 4.421269381685985e-16, "life": 1.0}, {"vx": -3.2927995812886715, "vy": -0.41597732445180324, "life": 1.0}, {"vx": -5.230845630479092, "vy": -1.3430528857272372, "life": 1.0}, {"vx": -2.0836005583928827, "vy": -0.8249558202143141, "life": 1.0}, {"vx": -2.078592408033574, "vy": -1.1427158463290303, "life": 1.0}, {"vx": -1.71972949231296, "vy": -1.2494566128304323, "life": 1.0}, {"vx": -4.443070869535606, "vy": -4.172321264270807, "life": 1.0}, {"vx": -4.029265764080022, "vy": -4.870545633387262, "life": 1.0}, {"vx": -3.079419571290668, "vy": -4.852388799406855, "life": 1.0}, {"vx": -2.94405903312941, "vy": -6.25644391356061, "life": 1.0}, {"vx": -0.6846507814842159, "vy": -2.1071384388881422, "life": 1.0}, {"vx": -1.006925493561391, "vy": -5.278488289751805, "life": 1.0}, {"vx": -0.3474305688551917, "vy": -5.522250756798491, "life": 1.0}, {"vx": 0.19126073688509454, "vy": -3.040002359290884, "life": 1.0}, {"vx": 0.9085576354316545, "vy": -4.76282591895484, "life": 1.0}, {"vx": 1.2058462924322304, "vy": -3.7112132825824946, "life": 1.0}, {"vx": 2.3361912064375, "vy": -4.964659026858328, "life": 1.0}, {"vx": 1.626989346113503, "vy": -2.563724980330146, "life": 1.0}, {"vx": 1.4881112576567497, "vy": -1.798817504813904, "life": 1.0}, {"vx": 2.5277872530709184, "vy": -2.3737502320422945, "life": 1.0}, {"vx": 3.1420042906502137, "vy": -2.282799740332698, "life": 1.0}, {"vx": 3.8988783100269293, "vy": -2.1434264892707944, "life": 1.0}, {"vx": 2.0787495401079115, "vy": -0.8230351662041039, "life": 1.0}, {"vx": 5.484297140870838, "vy": -1.40812817306513, "life": 1.0}, {"vx": 2.6046792617838785, "vy": -0.3290475121926263, "life": 1.0}]}, {"x": 141, "y": 251, "color": "#FFA07A", "particles": [{"vx": 2.292112620132736, "vy": 0.0, "life": 1.0}, {"vx": 3.0470127239038876, "vy": 0.38492722352816117, "life": 1.0}, {"vx": 4.714013530780525, "vy": 1.2103529568874247, "life": 1.0}, {"vx": 3.7278387987166175, "vy": 1.4759557926947593, "life": 1.0}, {"vx": 4.466078870984061, "vy": 2.455247636383322, "life": 1.0}, {"vx": 5.193542689208838, "vy": 3.7733296347215495, "life": 1.0}, {"vx": 3.2428554139458106, "vy": 3.0452439310237738, "life": 1.0}, {"vx": 1.717288414188659, "vy": 2.0758450985182995, "life": 1.0}, {"vx": 2.338003584154835, "vy": 3.684104144331018, "life": 1.0}, {"vx": 1.6652928450276994, "vy": 3.538927435668575, "life": 1.0}, {"vx": 2.024461909726975, "vy": 6.230653091205085, "life": 1.0}, {"vx": 0.826405905198438, "vy": 4.332171467566221, "life": 1.0}, {"vx": 0.19834630505468112, "vy": 3.1526242403066087, "life": 1.0}, {"vx": -0.3006670501102858, "vy": 4.778965911050633, "life": 1.0}, {"vx": -1.2023619166856245, "vy": 6.303001898205151, "life": 1.0}, {"vx": -2.074301857064188, "vy": 6.3840446766185135, "life": 1.0}, {"vx": -2.329551611778951, "vy": 4.950549169982982, "life": 1.0}, {"vx": -1.2141127844933572, "vy": 1.9131356219259865, "life": 1.0}, {"vx": -2.99862391104288, "vy": 3.6247136454239772, "life": 1.0}, {"vx": -3.756134373090217, "vy": 3.5272449565813164, "life": 1.0}, {"vx": -4.72658091192109, "vy": 3.4340620445690337, "life": 1.0}, {"vx": -4.051650500745739, "vy": 2.227413711844136, "life": 1.0}, {"vx": -6.098517318005534, "vy": 2.414573818336352, "life": 1.0}, {"vx": -2.0230777654038588, "vy": 0.5194380837859697, "life": 1.0}, {"vx": -3.501774266162585, "vy": 0.442376966502897, "life": 1.0}, {"vx": -4.423282166614014, "vy": 5.416958347069421e-16, "life": 1.0}, {"vx": -5.750710294854247, "vy": -0.7264836571725727, "life": 1.0}, {"vx": -6.26094411240303, "vy": -1.6075372227663483, "life": 1.0}, {"vx": -4.589703694619055, "vy": -1.8171922447820668, "life": 1.0}, {"vx": -3.8566736924708125, "vy": -2.1202243044252986, "life": 1.0}, {"vx": -2.74213512923945, "vy": -1.9922777889299348, "life": 1.0}, {"vx": -4.20386692147517, "vy": -3.947693805403737, "life": 1.0}, {"vx": -3.0801077109230666, "vy": -3.723210639401456, "life": 1.0}, {"vx": -1.9603670117226955, "vy": -3.0890441234751793, "life": 1.0}, {"vx": -2.4277423328833687, "vy": -5.159215073930189, "life": 1.0}, {"vx": -1.6928821728687478, "vy": -5.210155593815614, "life": 1.0}, {"vx": -0.49587794012285613, "vy": -2.5994831959482596, "life": 1.0}, {"vx": -0.4281934765920411, "vy": -6.805940415542803, "life": 1.0}, {"vx": 0.41788040888320643, "vy": -6.642018898366952, "life": 1.0}, {"vx": 1.1133820525469391, "vy": -5.836553115367663, "life": 1.0}, {"vx": 1.520834041980451, "vy": -4.6806458937789355, "life": 1.0}, {"vx": 2.2683789147928075, "vy": -4.820550571643673, "life": 1.0}, {"vx": 2.337141813452941, "vy": -3.682746210991722, "life": 1.0}, {"vx": 3.0871392806934392, "vy": -3.7317103471512567, "life": 1.0}, {"vx": 3.735979529599405, "vy": -3.5083182987484767, "life": 1.0}, {"vx": 4.230030852301433, "vy": -3.0732973089717563, "life": 1.0}, {"vx": 3.0143325522712328, "vy": -1.6571433438672203, "life": 1.0}, {"vx": 2.269803707464443, "vy": -0.898678862258082, "life": 1.0}, {"vx": 6.149791309283403, "vy": -1.5789980335926874, "life": 1.0}, {"vx": 3.4030390816796605, "vy": -0.4299038120164077, "life": 1.0}]}, {"x": 337, "y": 249, "color": "#45B7D1", "particles": [{"vx": 4.224468757618823, "vy": 0.0, "life": 1.0}, {"vx": 3.7884761269038565, "vy": 0.47859583436968345, "life": 1.0}, {"vx": 4.750945692594413, "vy": 1.2198355243352705, "life": 1.0}, {"vx": 3.796402528084417, "vy": 1.5031020935390982, "life": 1.0}, {"vx": 3.2658121518144014, "vy": 1.7953954236476486, "life": 1.0}, {"vx": 4.961907600497199, "vy": 3.605036891794249, "life": 1.0}, {"vx": 1.7435803789351263, "vy": 1.6373309597370322, "life": 1.0}, {"vx": 2.8373466626435606, "vy": 3.4297629412637702, "life": 1.0}, {"vx": 1.1511506851971505, "vy": 1.8139232287008564, "life": 1.0}, {"vx": 1.453872434132072, "vy": 3.0896361925020233, "life": 1.0}, {"vx": 1.0034959297826, "vy": 3.0884429027142817, "life": 1.0}, {"vx": 0.47668402518475234, "vy": 2.498865170202447, "life": 1.0}, {"vx": 0.2766101291474316, "vy": 4.396592102001215, "life": 1.0}, {"vx": -0.40157029571292757, "vy": 6.382777073173376, "life": 1.0}, {"vx": -0.46635481713164006, "vy": 2.444717565340522, "life": 1.0}, {"vx": -1.9917236242698002, "vy": 6.129895009018201, "life": 1.0}, {"vx": -0.9113012500903127, "vy": 1.9366137347752992, "life": 1.0}, {"vx": -3.131549542915136, "vy": 4.9345324906343295, "life": 1.0}, {"vx": -4.068966157704556, "vy": 4.918535165508846, "life": 1.0}, {"vx": -2.0717046593096375, "vy": 1.9454601686850834, "life": 1.0}, {"vx": -3.6334926188909447, "vy": 2.639886912817847, "life": 1.0}, {"vx": -3.513466267099334, "vy": 1.9315444256602243, "life": 1.0}, {"vx": -3.883914626287737, "vy": 1.5377505843264503, "life": 1.0}, {"vx": -5.912966624519425, "vy": 1.5181917894874535, "life": 1.0}, {"vx": -3.227973488111198, "vy": 0.40778788439360436, "life": 1.0}, {"vx": -6.80037835763265, "vy": 8.328061588665759e-16, "life": 1.0}, {"vx": -2.189419176554709, "vy": -0.27658796373214645, "life": 1.0}, {"vx": -4.387296264542927, "vy": -1.1264662207389644, "life": 1.0}, {"vx": -1.9470492493407636, "vy": -0.7708913323225863, "life": 1.0}, {"vx": -3.411608680936143, "vy": -1.875547743805885, "life": 1.0}, {"vx": -5.273144055544905, "vy": -3.831163412652032, "life": 1.0}, {"vx": -4.429187135952676, "vy": -4.159283570622319, "life": 1.0}, {"vx": -1.490197713004492, "vy": -1.801339596077725, "life": 1.0}, {"vx": -2.030659077095795, "vy": -3.1998066950596176, "life": 1.0}, {"vx": -1.3801274390245786, "vy": -2.9329201006696555, "life": 1.0}, {"vx": -1.8374148331366733, "vy": -5.654981382906352, "life": 1.0}, {"vx": -1.0444356875987244, "vy": -5.475123613058685, "life": 1.0}, {"vx": -0.28245010883521576, "vy": -4.4894159210359845, "life": 1.0}, {"vx": 0.14183223374828197, "vy": -2.2543587996176733, "life": 1.0}, {"vx": 0.620714992754308, "vy": -3.253901943567424, "life": 1.0}, {"vx": 1.5665398486566988, "vy": -4.821313902539739, "life": 1.0}, {"vx": 2.7911588297592496, "vy": -5.931514441701289, "life": 1.0}, {"vx": 3.39623897318952, "vy": -5.351616293945513, "life": 1.0}, {"vx": 2.911380940776414, "vy": -3.5192550103388642, "life": 1.0}, {"vx": 3.854114896032589, "vy": -3.61925479197689, "life": 1.0}, {"vx": 4.5268536009503, "vy": -3.2889516591446037, "life": 1.0}, {"vx": 5.214714004791695, "vy": -2.866813283989032, "life": 1.0}, {"vx": 2.7881752576017638, "vy": -1.1039166779213396, "life": 1.0}, {"vx": 2.514324834813977, "vy": -0.6455688933690241, "life": 1.0}, {"vx": 5.169574037508323, "vy": -0.6530690749895665, "life": 1.0}]}], "stars": [{"x": 142, "y": 63, "size": 3.1437695096602365, "twinkle": 0.6578035982679302, "twinkleSpeed": 0.08602859748980762}, {"x": 593, "y": 208, "size": 1.620685289147839, "twinkle": 0.6346332945646543, "twinkleSpeed": 0.08901205848750075}, {"x": 630, "y": 261, "size": 2.5396155324246785, "twinkle": 0.5842653653451662, "twinkleSpeed": 0.06972524910446012}, {"x": 79, "y": 142, "size": 3.0765657440017384, "twinkle": 0.5666009669885255, "twinkleSpeed": 0.06392663718010712}, {"x": 789, "y": 224, "size": 0.5926859273666195, "twinkle": 0.7831961269479788, "twinkleSpeed": 0.029928533666092827}, {"x": 240, "y": 128, "size": 1.2880766398652361, "twinkle": 0.7060645823471674, "twinkleSpeed": 0.026872407037019635}, {"x": 242, "y": 185, "size": 1.497496610510988, "twinkle": 0.9223515096890837, "twinkleSpeed": 0.03665126689435484}, {"x": 749, "y": 77, "size": 2.769217664626559, "twinkle": 0.7074899818909128, "twinkleSpeed": 0.0718804306669993}, {"x": 693, "y": 253, "size": 3.2306774638750477, "twinkle": 0.9841085270381096, "twinkleSpeed": 0.09932642025578146}, {"x": 114, "y": 331, "size": 2.3226696217887994, "twinkle": 0.8462103137661814, "twinkleSpeed": 0.03838467696328784}, {"x": 681, "y": 367, "size": 3.2965875830613083, "twinkle": 0.9008574442972321, "twinkleSpeed": 0.09577586400554504}, {"x": 608, "y": 179, "size": 1.0307878864898319, "twinkle": 0.8785639426066018, "twinkleSpeed": 0.0491719391943372}, {"x": 146, "y": 304, "size": 1.3830195524465063, "twinkle": 0.5543832518341157, "twinkleSpeed": 0.08060302299376701}, {"x": 222, "y": 99, "size": 3.3873981642713655, "twinkle": 0.941433062277488, "twinkleSpeed": 0.022108358777607088}, {"x": 459, "y": 281, "size": 1.5917806106033443, "twinkle": 0.5741076358196838, "twinkleSpeed": 0.06246643555049912}, {"x": 655, "y": 146, "size": 3.454310186047619, "twinkle": 0.813771695775908, "twinkleSpeed": 0.09731986196816576}, {"x": 5, "y": 18, "size": 3.3619880695122233, "twinkle": 0.8765449086677569, "twinkleSpeed": 0.09571079322677624}, {"x": 489, "y": 284, "size": 0.7294137481630447, "twinkle": 0.7001013945571178, "twinkleSpeed": 0.04508518107412522}, {"x": 674, "y": 183, "size": 3.4261404100301514, "twinkle": 0.9635830330720572, "twinkleSpeed": 0.021155995994554803}, {"x": 369, "y": 1, "size": 2.3562989218233605, "twinkle": 0.551789794331225, "twinkleSpeed": 0.0799590269423073}, {"x": 562, "y": 26, "size": 2.362417413279538, "twinkle": 0.8277492344847175, "twinkleSpeed": 0.030601284418974473}, {"x": 47, "y": 126, "size": 0.7175751747056245, "twinkle": 0.8704625352801796, "twinkleSpeed": 0.08936069782779539}, {"x": 594, "y": 194, "size": 1.922972430419453, "twinkle": 0.5230351782911283, "twinkleSpeed": 0.09363826726824226}, {"x": 204, "y": 388, "size": 0.5418724787653508, "twinkle": 0.7906375516473882, "twinkleSpeed": 0.08138658417972776}, {"x": 584, "y": 194, "size": 1.5389748407906252, "twinkle": 0.7127171137562471, "twinkleSpeed": 0.029679145574102048}, {"x": 178, "y": 368, "size": 1.0686124767636722, "twinkle": 0.9095579446304853, "twinkleSpeed": 0.09733440313926495}, {"x": 535, "y": 31, "size": 2.695940571349711, "twinkle": 0.7709340460957844, "twinkleSpeed": 0.025765062827157445}, {"x": 598, "y": 355, "size": 2.038324980651198, "twinkle": 0.6102244120940674, "twinkleSpeed": 0.047499160900144013}, {"x": 732, "y": 86, "size": 1.5036948981271046, "twinkle": 0.7293700502767461, "twinkleSpeed": 0.033432801623794396}, {"x": 425, "y": 303, "size": 1.4802525311279942, "twinkle": 0.7984368697071729, "twinkleSpeed": 0.03985467079091003}, {"x": 709, "y": 174, "size": 1.8356759302313845, "twinkle": 0.7590394450276611, "twinkleSpeed": 0.05837893310337648}, {"x": 713, "y": 394, "size": 1.62261044410809, "twinkle": 0.9671945778005789, "twinkleSpeed": 0.030671174584760187}, {"x": 661, "y": 392, "size": 2.385607372520105, "twinkle": 0.581589186314809, "twinkleSpeed": 0.05740700328628655}, {"x": 490, "y": 120, "size": 2.0885942061897116, "twinkle": 0.978708239869754, "twinkleSpeed": 0.05697118489998994}, {"x": 330, "y": 368, "size": 1.662622357341947, "twinkle": 0.5755433388293604, "twinkleSpeed": 0.06025508439204136}, {"x": 172, "y": 181, "size": 1.937477520522498, "twinkle": 0.7520843505127182, "twinkleSpeed": 0.03896192122513197}, {"x": 334, "y": 155, "size": 3.351051063560937, "twinkle": 0.8683264805035334, "twinkleSpeed": 0.031051459175613073}, {"x": 95, "y": 80, "size": 3.339465519692627, "twinkle": 0.9898730439579191, "twinkleSpeed": 0.07493062208758006}, {"x": 298, "y": 75, "size": 1.6323621865479143, "twinkle": 0.6499054558746822, "twinkleSpeed": 0.07255071023370072}, {"x": 711, "y": 173, "size": 0.9555640896692817, "twinkle": 0.7494130563338852, "twinkleSpeed": 0.09603747177445957}, {"x": 342, "y": 320, "size": 2.8171300536275425, "twinkle": 0.6848704282658473, "twinkleSpeed": 0.06633509339716832}, {"x": 345, "y": 348, "size": 1.542143754679545, "twinkle": 0.622155806421991, "twinkleSpeed": 0.05682081661753849}, {"x": 664, "y": 44, "size": 1.9512406396845092, "twinkle": 0.5687806701548341, "twinkleSpeed": 0.09224364847478678}, {"x": 7, "y": 335, "size": 3.0260375890958886, "twinkle": 0.8671066006935155, "twinkleSpeed": 0.0761054923336577}, {"x": 407, "y": 229, "size": 0.7034089508132109, "twinkle": 0.5635183701312622, "twinkleSpeed": 0.03550935752092247}, {"x": 42, "y": 276, "size": 1.078783541818273, "twinkle": 0.5536225458968131, "twinkleSpeed": 0.03602124380620379}, {"x": 416, "y": 389, "size": 3.4219078655687136, "twinkle": 0.8207717574887927, "twinkleSpeed": 0.023384516721350508}, {"x": 58, "y": 360, "size": 2.5876667603182026, "twinkle": 0.5622720276404578, "twinkleSpeed": 0.022784266141014874}, {"x": 194, "y": 97, "size": 2.0963079252024692, "twinkle": 0.5219087751746765, "twinkleSpeed": 0.07350924988194894}, {"x": 674, "y": 141, "size": 0.6177500970066874, "twinkle": 0.8117875317908978, "twinkleSpeed": 0.05546639230299322}, {"x": 502, "y": 185, "size": 1.531586556691166, "twinkle": 0.9978347997466752, "twinkleSpeed": 0.06663174179415787}, {"x": 342, "y": 382, "size": 2.4173962539178357, "twinkle": 0.816984463723211, "twinkleSpeed": 0.0871952425432336}, {"x": 771, "y": 192, "size": 2.6921661468957017, "twinkle": 0.7076611626275939, "twinkleSpeed": 0.02154842841495804}, {"x": 131, "y": 264, "size": 1.0680673474593845, "twinkle": 0.6125151299098851, "twinkleSpeed": 0.07351958941335199}, {"x": 492, "y": 56, "size": 1.6312299117232163, "twinkle": 0.5260873526009724, "twinkleSpeed": 0.08375194863823814}, {"x": 465, "y": 243, "size": 3.165865445585214, "twinkle": 0.6545288618097241, "twinkleSpeed": 0.06373863667809894}, {"x": 157, "y": 279, "size": 3.4771229186215984, "twinkle": 0.5925195235547662, "twinkleSpeed": 0.06812210927112375}, {"x": 643, "y": 39, "size": 1.8423607039283028, "twinkle": 0.8577192624234096, "twinkleSpeed": 0.02797275992295778}, {"x": 365, "y": 375, "size": 1.592915205241259, "twinkle": 0.5772123622397443, "twinkleSpeed": 0.078500803501321}, {"x": 71, "y": 110, "size": 2.9842747095694837, "twinkle": 0.5692168005168491, "twinkleSpeed": 0.0781989666726789}, {"x": 588, "y": 9, "size": 1.7817041594096275, "twinkle": 0.8585276792163049, "twinkleSpeed": 0.07971674184446333}, {"x": 36, "y": 137, "size": 1.8938647718467383, "twinkle": 0.8617442747895887, "twinkleSpeed": 0.054597264595694014}, {"x": 522, "y": 230, "size": 2.8873984615513266, "twinkle": 0.5126573949044262, "twinkleSpeed": 0.08924608626121128}, {"x": 492, "y": 188, "size": 1.3971384846430182, "twinkle": 0.8495402573632942, "twinkleSpeed": 0.09758224938029783}, {"x": 195, "y": 362, "size": 2.2237491948394466, "twinkle": 0.6661655277093765, "twinkleSpeed": 0.024369362324895977}, {"x": 536, "y": 121, "size": 2.1524518066077967, "twinkle": 0.8465375482146295, "twinkleSpeed": 0.06169304590540234}, {"x": 297, "y": 386, "size": 2.470076634305686, "twinkle": 0.6176542192820045, "twinkleSpeed": 0.034375631820125346}, {"x": 458, "y": 19, "size": 2.527172594602716, "twinkle": 0.6835402517854148, "twinkleSpeed": 0.048205199116531414}, {"x": 41, "y": 150, "size": 0.5606167946624504, "twinkle": 0.7128145306149957, "twinkleSpeed": 0.09189275515716365}, {"x": 701, "y": 254, "size": 2.529375455728305, "twinkle": 0.5408240995959436, "twinkleSpeed": 0.06314300716354496}, {"x": 93, "y": 88, "size": 1.2661398814460494, "twinkle": 0.8277368557925391, "twinkleSpeed": 0.056779005717828304}, {"x": 58, "y": 93, "size": 3.499415957204378, "twinkle": 0.906163910550476, "twinkleSpeed": 0.042382103649220425}, {"x": 178, "y": 331, "size": 2.9523056412887163, "twinkle": 0.5332832388071282, "twinkleSpeed": 0.09116465563412143}, {"x": 578, "y": 112, "size": 1.7585354928465033, "twinkle": 0.603423188289522, "twinkleSpeed": 0.09532659681352988}, {"x": 607, "y": 141, "size": 1.9120138489766785, "twinkle": 0.9566230368650117, "twinkleSpeed": 0.08759657335914488}, {"x": 359, "y": 170, "size": 0.8436368267636237, "twinkle": 0.8966485790281298, "twinkleSpeed": 0.02083645368049517}, {"x": 255, "y": 106, "size": 2.811369755447054, "twinkle": 0.6371995729517763, "twinkleSpeed": 0.0891743482484799}, {"x": 295, "y": 378, "size": 1.5443475837236917, "twinkle": 0.6478396463207214, "twinkleSpeed": 0.05866611678526738}, {"x": 499, "y": 75, "size": 3.4373767031574465, "twinkle": 0.8434797373830771, "twinkleSpeed": 0.07558110403383624}, {"x": 517, "y": 208, "size": 3.0192665156687877, "twinkle": 0.9097598536795471, "twinkleSpeed": 0.0971717619879977}, {"x": 217, "y": 72, "size": 0.8987651680364399, "twinkle": 0.6691854931352375, "twinkleSpeed": 0.04348040837089641}, {"x": 328, "y": 18, "size": 3.0237882493847206, "twinkle": 0.6878870175828606, "twinkleSpeed": 0.08114422059688799}, {"x": 339, "y": 188, "size": 1.3905644510785082, "twinkle": 0.7394890686240684, "twinkleSpeed": 0.04830767517432516}, {"x": 541, "y": 108, "size": 1.3809532803247841, "twinkle": 0.7429890747650719, "twinkleSpeed": 0.07397652288807693}, {"x": 105, "y": 71, "size": 3.4869162956756097, "twinkle": 0.8621396750182695, "twinkleSpeed": 0.09420830257691672}, {"x": 424, "y": 195, "size": 3.273695422340003, "twinkle": 0.901338724890526, "twinkleSpeed": 0.06111717233880622}, {"x": 513, "y": 398, "size": 2.652800980833956, "twinkle": 0.5413145804040915, "twinkleSpeed": 0.06089002958192591}, {"x": 719, "y": 320, "size": 0.8934426646971368, "twinkle": 0.8281161018739966, "twinkleSpeed": 0.09608990038519734}, {"x": 37, "y": 121, "size": 1.7824401995789692, "twinkle": 0.5077021757281329, "twinkleSpeed": 0.04949020967417713}, {"x": 39, "y": 100, "size": 1.9144318511376575, "twinkle": 0.7275522668092154, "twinkleSpeed": 0.03176242673498492}, {"x": 751, "y": 360, "size": 0.7445659284973042, "twinkle": 0.9471760502095339, "twinkleSpeed": 0.022990312551536985}, {"x": 193, "y": 321, "size": 1.2573654773255578, "twinkle": 0.5766702007200337, "twinkleSpeed": 0.03390685710659208}, {"x": 438, "y": 139, "size": 1.890397153378236, "twinkle": 0.8602094602743766, "twinkleSpeed": 0.025505125071539753}, {"x": 265, "y": 101, "size": 1.6315599696584027, "twinkle": 0.766431790762135, "twinkleSpeed": 0.03922171422378482}, {"x": 457, "y": 52, "size": 2.9705584424305234, "twinkle": 0.849170757389432, "twinkleSpeed": 0.07262382164484002}, {"x": 444, "y": 194, "size": 2.4758002631535607, "twinkle": 0.6457603774975007, "twinkleSpeed": 0.04466151990684069}, {"x": 22, "y": 291, "size": 2.8415115504178603, "twinkle": 0.9124970386310455, "twinkleSpeed": 0.031606027767674585}, {"x": 685, "y": 340, "size": 1.3628689926084347, "twinkle": 0.7173197648708551, "twinkleSpeed": 0.08398536795503514}, {"x": 326, "y": 262, "size": 1.292017159410649, "twinkle": 0.8081650555158832, "twinkleSpeed": 0.06417411547093123}, {"x": 93, "y": 214, "size": 0.573090793632396, "twinkle": 0.8292524569181392, "twinkleSpeed": 0.09572760442018129}], "celebrations": ["\ud83c\udf8a \u65b0\u5e74\u5feb\u4e50\uff01\u4e07\u4e8b\u5982\u610f\uff01", "\ud83e\udde7 \u606d\u559c\u53d1\u8d22\uff01\u7ea2\u5305\u62ff\u6765\uff01", "\ud83c\udfee \u5c81\u5c81\u5e73\u5b89\uff01\u5e74\u5e74\u6709\u4f59\uff01", "\ud83c\udf86 \u5fc3\u60f3\u4e8b\u6210\uff01\u68a6\u60f3\u6210\u771f\uff01", "\ud83d\udcbc \u5347\u804c\u52a0\u85aa\uff01\u6b65\u6b65\u9ad8\u5347\uff01", "\ud83d\udcc8 \u4e8b\u4e1a\u6709\u6210\uff01\u524d\u7a0b\u4f3c\u9526\uff01", "\ud83c\udfaf \u76ee\u6807\u8fbe\u6210\uff01\u518d\u521b\u8f89\u714c\uff01", "\ud83d\udca1 \u8d22\u6e90\u6eda\u6eda\uff01\u65e5\u8fdb\u6597\u91d1\uff01", "\ud83c\udfc3 \u8eab\u4f53\u5065\u5eb7\uff01\u9f99\u9a6c\u7cbe\u795e\uff01", "\ud83d\udcaa \u7cbe\u529b\u5145\u6c9b\uff01\u6d3b\u529b\u56db\u5c04\uff01", "\ud83c\udf1f \u9752\u6625\u6c38\u9a7b\uff01\u5bb9\u5149\u7115\u53d1\uff01", "\ud83c\udf4e \u5e73\u5b89\u559c\u4e50\uff01\u798f\u5bff\u5b89\u5eb7\uff01", "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 \u5bb6\u5ead\u548c\u7766\uff01\u5e78\u798f\u7f8e\u6ee1\uff01", "\u2764\ufe0f \u7231\u60c5\u751c\u871c\uff01\u767d\u5934\u5055\u8001\uff01", "\ud83d\udc6b \u53cb\u8c0a\u957f\u5b58\uff01\u60c5\u6df1\u4e49\u91cd\uff01", "\ud83c\udfe0 \u5bb6\u548c\u4e07\u4e8b\u5174\uff01\u798f\u6c14\u6ee1\u95e8\uff01", "\ud83d\udcda \u5b66\u4e1a\u6709\u6210\uff01\u91d1\u699c\u9898\u540d\uff01", "\ud83c\udf93 \u667a\u6167\u8d85\u7fa4\uff01\u624d\u534e\u6a2a\u6ea2\uff01", "\ud83d\udcd6 \u535a\u5b66\u591a\u624d\uff01\u89c1\u591a\u8bc6\u5e7f\uff01", "\ud83c\udfc6 \u52c7\u593a\u6842\u51a0\uff01\u540d\u5217\u524d\u8305\uff01", "\ud83c\udf08 \u4e94\u798f\u4e34\u95e8\uff01\u5409\u7965\u5982\u610f\uff01", "\u2b50 \u597d\u8fd0\u8fde\u8fde\uff01\u798f\u661f\u9ad8\u7167\uff01", "\ud83c\udfaa \u6b22\u58f0\u7b11\u8bed\uff01\u5feb\u4e50\u65e0\u9650\uff01", "\ud83c\udfa8 \u7cbe\u5f69\u4eba\u751f\uff01\u7eda\u4e3d\u591a\u5f69\uff01", "\ud83e\udd84 2026\u5e74\uff0c\u6210\u4e3a\u66f4\u597d\u7684\u81ea\u5df1\uff01", "\ud83d\ude80 \u65b0\u7684\u4e00\u5e74\uff0c\u51b2\u5411\u65b0\u9ad8\u5ea6\uff01", "\ud83d\udc8e \u50cf\u94bb\u77f3\u4e00\u6837\u95ea\u8000\u593a\u76ee\uff01", "\ud83c\udf38 \u5982\u82b1\u822c\u7efd\u653e\u7f8e\u4e3d\u4eba\u751f\uff01"], "decorations": [{"type": "lantern", "x": 80, "y": 41, "size": 28.019500769751133, "color": "#FFD700", "swing": 0.48261760193099607, "swingSpeed": 0.03184434409113486}, {"type": "lantern", "x": 170, "y": 55, "size": 29.383459568508727, "color": "#FF69B4", "swing": 1.757107742513107, "swingSpeed": 0.020878486770808807}, {"type": "lantern", "x": 260, "y": 67, "size": 29.75773025553286, "color": "#FF69B4", "swing": 5.462659213903662, "swingSpeed": 0.025175385756340173}, {"type": "lantern", "x": 350, "y": 56, "size": 27.280270620378463, "color": "#FFD700", "swing": 3.4064384328651043, "swingSpeed": 0.02692460310285258}, {"type": "lantern", "x": 440, "y": 43, "size": 27.473330442748793, "color": "#FF6B6B", "swing": 3.6711527620113813, "swingSpeed": 0.02810268100958}, {"type": "lantern", "x": 530, "y": 52, "size": 27.161010435339744, "color": "#FFA07A", "swing": 4.549145494805566, "swingSpeed": 0.03111763706317682}, {"type": "lantern", "x": 620, "y": 35, "size": 25.796536797283956, "color": "#FF69B4", "swing": 4.080494849866025, "swingSpeed": 0.03403233709838363}, {"type": "lantern", "x": 710, "y": 55, "size": 34.846906072552876, "color": "#FF6B6B", "swing": 0.7650355067737538, "swingSpeed": 0.024816071084174503}, {"type": "snowflake", "x": 647, "y": 228, "size": 5.377965069349715, "speed": 1.3124490622339504, "rotation": 0.5154484592190124, "rotationSpeed": 0.03693316763868759}, {"type": "snowflake", "x": 234, "y": 292, "size": 4.461051480085753, "speed": 1.5697733141009573, "rotation": 3.7483203235593328, "rotationSpeed": 0.021689340299853963}, {"type": "snowflake", "x": 277, "y": 256, "size": 6.714317349705185, "speed": 0.5596463504450657, "rotation": 0.16405925701562304, "rotationSpeed": 0.024382454882631945}, {"type": "snowflake", "x": 642, "y": 512, "size": 3.0797267978330565, "speed": 1.6552076074641837, "rotation": 3.3157224383659045, "rotationSpeed": 0.020648285938366106}, {"type": "snowflake", "x": 430, "y": 457, "size": 7.754943790534707, "speed": 1.864109745596785, "rotation": 5.060024112454913, "rotationSpeed": 0.024222762114484618}, {"type": "snowflake", "x": 440, "y": 255, "size": 7.903161982447858, "speed": 0.6620666951081069, "rotation": 4.381096307214932, "rotationSpeed": 0.020389589175050436}, {"type": "snowflake", "x": 438, "y": 188, "size": 3.9338658121905565, "speed": 0.5259563619074314, "rotation": 0.1333349570212648, "rotationSpeed": 0.03665023502796211}, {"type": "snowflake", "x": 107, "y": 507, "size": 7.127145271541115, "speed": 1.3974839607489156, "rotation": 4.4216176880631455, "rotationSpeed": 0.037334885212975816}, {"type": "snowflake", "x": 760, "y": 180, "size": 5.3964643496785385, "speed": 1.609041121448887, "rotation": 0.7075657748705094, "rotationSpeed": 0.03173335075249801}, {"type": "snowflake", "x": 770, "y": 121, "size": 7.859431770256762, "speed": 0.8241554459792706, "rotation": 0.6158945351792224, "rotationSpeed": 0.027391610865530054}, {"type": "snowflake", "x": 553, "y": 391, "size": 7.5921197475811395, "speed": 1.4363115964234188, "rotation": 6.072704302513186, "rotationSpeed": 0.036873808757709514}, {"type": "snowflake", "x": 523, "y": 187, "size": 3.9491068297793026, "speed": 1.5098746283740954, "rotation": 0.6397607968523809, "rotationSpeed": 0.04328367629055621}, {"type": "snowflake", "x": 609, "y": 248, "size": 6.055029825806783, "speed": 0.8109566372476912, "rotation": 5.319727716077639, "rotationSpeed": 0.023485786872280576}, {"type": "snowflake", "x": 523, "y": 74, "size": 3.585318323594031, "speed": 1.4017304697114292, "rotation": 1.094874437007282, "rotationSpeed": 0.027901854991189995}, {"type": "snowflake", "x": 766, "y": 330, "size": 4.703923040330608, "speed": 1.9917275507478926, "rotation": 5.857003419292977, "rotationSpeed": 0.02406030809574783}, {"type": "snowflake", "x": 162, "y": 567, "size": 3.459711257071719, "speed": 1.6040498932713154, "rotation": 0.145673202355044, "rotationSpeed": 0.029052231701769383}, {"type": "snowflake", "x": 693, "y": 256, "size": 3.084213034472231, "speed": 0.9608196186292774, "rotation": 1.45037740977855, "rotationSpeed": 0.02836903524182182}, {"type": "snowflake", "x": 728, "y": 593, "size": 7.986204950615464, "speed": 0.8760898321030277, "rotation": 5.842533069073987, "rotationSpeed": 0.020437980906524898}, {"type": "snowflake", "x": 428, "y": 36, "size": 7.508254957125747, "speed": 1.0158947608138313, "rotation": 5.377249984424875, "rotationSpeed": 0.0408350734947692}, {"type": "snowflake", "x": 9, "y": 173, "size": 6.9497802078849045, "speed": 1.978553312747647, "rotation": 0.3260328631035002, "rotationSpeed": 0.030750718049261765}, {"type": "snowflake", "x": 164, "y": 259, "size": 4.995575820376679, "speed": 1.4896594681342736, "rotation": 5.15264484072677, "rotationSpeed": 0.028165692034578485}, {"type": "snowflake", "x": 204, "y": 25, "size": 3.1516562833777617, "speed": 1.9359786435166697, "rotation": 3.1812069146473703, "rotationSpeed": 0.044929691571501694}, {"type": "snowflake", "x": 724, "y": 222, "size": 5.832262188525184, "speed": 1.979478179682392, "rotation": 2.2027065126605163, "rotationSpeed": 0.02635848194614154}, {"type": "snowflake", "x": 692, "y": 582, "size": 3.449334896402708, "speed": 1.1730878597208563, "rotation": 0.3231006060741982, "rotationSpeed": 0.043367491634452845}, {"type": "snowflake", "x": 222, "y": 34, "size": 3.570904788688045, "speed": 1.404913519644448, "rotation": 5.511267778473933, "rotationSpeed": 0.03221759550166822}, {"type": "snowflake", "x": 475, "y": 373, "size": 5.986518950936754, "speed": 0.6593033660274296, "rotation": 1.047086027934121, "rotationSpeed": 0.02803143136371703}, {"type": "snowflake", "x": 332, "y": 57, "size": 5.209944814991231, "speed": 1.248738019924797, "rotation": 0.14325353377096775, "rotationSpeed": 0.02179820532751894}, {"type": "snowflake", "x": 446, "y": 276, "size": 6.273382349315192, "speed": 1.6310943507362048, "rotation": 0.8717865754671114, "rotationSpeed": 0.03490688447638084}, {"type": "snowflake", "x": 251, "y": 550, "size": 7.44735101457143, "speed": 1.929399302837228, "rotation": 1.878231352498976, "rotationSpeed": 0.042007626687418004}, {"type": "snowflake", "x": 723, "y": 173, "size": 3.732830024643128, "speed": 0.9482660580989488, "rotation": 0.4711112257708813, "rotationSpeed": 0.044054552163475355}, {"type": "ribbon", "x": 30, "y": 89, "length": 106.13370773853737, "color": "#FF69B4", "speed": 2.8833586519883463, "wave": 2.09665046014538, "waveSpeed": 0.09974668745670795}, {"type": "ribbon", "x": 501, "y": -40, "length": 97.5386678742588, "color": "#4ECDC4", "speed": 2.0279465054824404, "wave": 1.5745259820808921, "waveSpeed": 0.07428017158348507}, {"type": "ribbon", "x": 108, "y": 93, "length": 109.30562508238376, "color": "#98D8C8", "speed": 1.369422969895079, "wave": 4.909115515963281, "waveSpeed": 0.05020180830573419}, {"type": "ribbon", "x": 26, "y": -13, "length": 99.55931030858969, "color": "#FF6B6B", "speed": 1.1760439683514747, "wave": 5.89130759097598, "waveSpeed": 0.055188033699764244}, {"type": "ribbon", "x": 764, "y": 77, "length": 69.12441254505737, "color": "#98D8C8", "speed": 2.8132431161775893, "wave": 4.5594330874389355, "waveSpeed": 0.08410530907017114}, {"type": "ribbon", "x": 533, "y": 50, "length": 75.44057866525873, "color": "#4ECDC4", "speed": 1.1523804561460482, "wave": 4.006201587848722, "waveSpeed": 0.07735468335067253}, {"type": "ribbon", "x": 11, "y": -50, "length": 67.11692244699597, "color": "#98D8C8", "speed": 2.014302789708111, "wave": 1.2395127695468664, "waveSpeed": 0.08926146477481}, {"type": "ribbon", "x": 695, "y": 91, "length": 66.10057263793996, "color": "#FF6B6B", "speed": 2.438511011630249, "wave": 2.8744215753785087, "waveSpeed": 0.05471478545303811}, {"type": "ribbon", "x": 371, "y": 44, "length": 66.01098587894698, "color": "#FF6B6B", "speed": 2.7932732308706583, "wave": 5.32775751842655, "waveSpeed": 0.05078879178342447}, {"type": "ribbon", "x": 773, "y": 71, "length": 116.74792870175872, "color": "#4ECDC4", "speed": 1.0063425037568996, "wave": 4.966583108138672, "waveSpeed": 0.06683697897496735}, {"type": "ribbon", "x": 796, "y": 62, "length": 87.66341068492174, "color": "#FFD700", "speed": 1.9507031492566749, "wave": 2.7716308128301943, "waveSpeed": 0.06957741216919486}, {"type": "ribbon", "x": 416, "y": -44, "length": 111.37728060817581, "color": "#FFD700", "speed": 2.4562703942625035, "wave": 5.558103628861118, "waveSpeed": 0.08784375879413617}], "year": "2026", "message": "\u5143\u65e6\u5feb\u4e50\uff01Happy New Year!", "currentLevel": 0, "totalLevels": 15};
+        
+        // Canvas设置
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = 800;
+        canvas.height = 600;
+        
+        // 游戏状态
+        let currentLevel = 0;
+        let score = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let timeRemaining = 60;
+        let gameActive = false;
+        let timerInterval = null;
+        let fireworks = JSON.parse(JSON.stringify(gameData.fireworks));
+        let stars = JSON.parse(JSON.stringify(gameData.stars));
+        let decorations = JSON.parse(JSON.stringify(gameData.decorations));
+        let balloons = [];
+        let powerups = [];
+        let activeFireworks = [];
+        let particles = [];
+        let trails = [];
+        
+        // 道具效果
+        let multishotActive = false;
+        let slowmoActive = false;
+        let timewarpActive = false;
+        let powerupTimer = 0;
+        
+        // 更新UI
+        document.querySelector('.year-display').textContent = gameData.year;
+        document.getElementById('gameMessage').textContent = gameData.message;
+        
+        // 创建节日装饰
+        function createFestivalDecorations() {
+            const container = document.getElementById('festivalDecorations');
+            container.innerHTML = '';
+            
+            decorations.forEach(dec => {
+                if (dec.type === 'lantern') {
+                    const lantern = document.createElement('div');
+                    lantern.className = 'festival-decoration lantern-decoration';
+                    lantern.textContent = '🏮';
+                    lantern.style.left = dec.x + 'px';
+                    lantern.style.top = dec.y + 'px';
+                    lantern.style.fontSize = dec.size + 'px';
+                    lantern.style.color = dec.color;
+                    lantern.style.animationDelay = Math.random() * 2 + 's';
+                    container.appendChild(lantern);
+                } else if (dec.type === 'snowflake') {
+                    const snowflake = document.createElement('div');
+                    snowflake.className = 'festival-decoration snowflake-decoration';
+                    snowflake.textContent = '❄️';
+                    snowflake.style.left = dec.x + 'px';
+                    snowflake.style.top = dec.y + 'px';
+                    snowflake.style.fontSize = dec.size + 'px';
+                    snowflake.style.animationDuration = (10 / dec.speed) + 's';
+                    snowflake.style.animationDelay = Math.random() * 5 + 's';
+                    container.appendChild(snowflake);
+                } else if (dec.type === 'ribbon') {
+                    const ribbon = document.createElement('div');
+                    ribbon.className = 'festival-decoration ribbon-decoration';
+                    ribbon.style.left = dec.x + 'px';
+                    ribbon.style.top = dec.y + 'px';
+                    ribbon.style.height = dec.length + 'px';
+                    ribbon.style.backgroundColor = dec.color;
+                    ribbon.style.animationDuration = (2 / dec.waveSpeed) + 's';
+                    ribbon.style.animationDelay = Math.random() * 2 + 's';
+                    container.appendChild(ribbon);
+                }
+            });
+        }
+        
+        // 开始关卡
+        function startLevel(levelIndex) {
+            if (levelIndex >= gameData.levels.length) {
+                // 游戏通关
+                showGameComplete();
+                return;
+            }
+            
+            currentLevel = levelIndex;
+            const level = gameData.levels[levelIndex];
+            
+            // 重置游戏状态
+            score = 0;
+            combo = 0;
+            timeRemaining = level.timeLimit;
+            gameActive = true;
+            
+            // 生成关卡元素
+            balloons = generateBalloonsForLevel(level);
+            powerups = generatePowerupsForLevel(level);
+            
+            // 更新UI
+            document.getElementById('levelName').textContent = level.name;
+            document.getElementById('targetScore').textContent = level.targetScore;
+            document.getElementById('targetProgress').textContent = level.targetScore;
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeRemaining;
+            document.getElementById('currentProgress').textContent = score;
+            updateProgress();
+            updateCombo();
+            
+            // 隐藏消息
+            document.getElementById('gameMessage').style.display = 'none';
+            
+            // 开始计时
+            if (timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+        
+        // 生成气球
+        function generateBalloonsForLevel(level) {
+            const balloons = [];
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#FFD700', '#FF69B4', '#FF1493'];
+            
+            for (let i = 0; i < level.balloonCount; i++) {
+                const speedMultiplier = 1 + (i * 0.15);
+                balloons.push({
+                    x: Math.random() * 700 + 50,
+                    y: 500 + Math.random() * 100,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    speed: (Math.random() * 0.8 + 1.2) * speedMultiplier * level.balloonSpeed,
+                    wobble: Math.random() * Math.PI * 2,
+                    wobbleSpeed: Math.random() * 0.05 + 0.03,
+                    popped: false,
+                    points: 10 + (i * 3),
+                    size: Math.max(12, 25 - (i * 0.8))
+                });
+            }
+            
+            return balloons;
+        }
+        
+        // 生成道具
+        function generatePowerupsForLevel(level) {
+            const powerups = [];
+            const types = ['multishot', 'bonus', 'slowmo', 'timewarp', 'megapoints'];
+            
+            for (let i = 0; i < level.powerupCount; i++) {
+                powerups.push({
+                    x: Math.random() * 600 + 100,
+                    y: Math.random() * 200 + 200,
+                    type: types[Math.floor(Math.random() * types.length)],
+                    collected: false,
+                    rotation: 0
+                });
+            }
+            
+            return powerups;
+        }
+        
+        // 更新计时器
+        function updateTimer() {
+            if (!gameActive) return;
+            
+            timeRemaining--;
+            document.getElementById('timer').textContent = timeRemaining;
+            
+            // 时间警告
+            const timerPanel = document.getElementById('timerPanel');
+            if (timeRemaining <= 10) {
+                timerPanel.classList.add('warning');
+            } else {
+                timerPanel.classList.remove('warning');
+            }
+            
+            // 检查游戏结束
+            if (timeRemaining <= 0) {
+                endLevel(false);
+            }
+        }
+        
+        // 更新进度条
+        function updateProgress() {
+            const level = gameData.levels[currentLevel];
+            const progress = Math.min((score / level.targetScore) * 100, 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('currentProgress').textContent = score;
+            
+            // 检查是否达到目标
+            if (score >= level.targetScore && gameActive) {
+                endLevel(true);
+            }
+        }
+        
+        // 结束关卡
+        function endLevel(success) {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const level = gameData.levels[currentLevel];
+            
+            if (success) {
+                // 显示关卡完成界面
+                const celebrationText = gameData.celebrations[Math.floor(Math.random() * gameData.celebrations.length)];
+                document.getElementById('celebrationText').textContent = celebrationText;
+                document.getElementById('timeUsed').textContent = level.timeLimit - timeRemaining;
+                document.getElementById('finalScore').textContent = score;
+                document.getElementById('levelComplete').classList.add('show');
+                
+                // 庆祝烟花
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        createFirework(
+                            Math.random() * canvas.width,
+                            Math.random() * canvas.height * 0.6
+                        );
+                    }, i * 200);
+                }
+            } else {
+                // 显示游戏结束界面
+                document.getElementById('finalScoreOver').textContent = score;
+                document.getElementById('targetScoreOver').textContent = level.targetScore;
+                document.getElementById('gameOver').classList.add('show');
+            }
+        }
+        
+        // 下一关
+        function nextLevel() {
+            document.getElementById('levelComplete').classList.remove('show');
+            startLevel(currentLevel + 1);
+        }
+        
+        // 重新开始游戏
+        function restartGame() {
+            document.getElementById('gameOver').classList.remove('show');
+            startLevel(0);
+        }
+        
+        // 游戏通关
+        function showGameComplete() {
+            gameActive = false;
+            clearInterval(timerInterval);
+            
+            const completeDiv = document.getElementById('levelComplete');
+            completeDiv.innerHTML = `
+                <div>🏆 恭喜通关！🏆</div>
+                <div class="celebration-text">2026元旦游戏大师！</div>
+                <div>总得分: ${score}</div>
+                <div>最高连击: ${maxCombo}</div>
+                <button class="next-level-btn" onclick="restartGame()">重新挑战</button>
+            `;
+            completeDiv.classList.add('show');
+            
+            // 终极庆祝烟花
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    createFirework(
+                        Math.random() * canvas.width,
+                        Math.random() * canvas.height * 0.6
+                    );
+                }, i * 100);
+            }
+        }
+        
+        // 创建分数粒子效果
+        function createScoreParticle(x, y, points) {
+            const particle = document.createElement('div');
+            particle.className = 'particle-text';
+            particle.textContent = `+${points}`;
+            particle.style.left = x + 'px';
+            particle.style.top = y + 'px';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1000);
+        }
+        
+        // 绘制星星
+        function drawStars() {
+            stars.forEach(star => {
+                ctx.save();
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.twinkle})`;
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // 星星光晕
+                if (star.size > 1.5) {
+                    ctx.globalAlpha = star.twinkle * 0.3;
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size * 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+                
+                // 闪烁效果
+                star.twinkle += (Math.random() - 0.5) * star.twinkleSpeed;
+                star.twinkle = Math.max(0.3, Math.min(1, star.twinkle));
+            });
+        }
+        
+        // 绘制节日装饰
+        function drawDecorations() {
+            decorations.forEach(dec => {
+                if (dec.type === 'lantern') {
+                    ctx.save();
+                    ctx.translate(dec.x, dec.y);
+                    ctx.rotate(Math.sin(dec.swing) * 0.1);
+                    
+                    // 灯笼主体
+                    ctx.fillStyle = dec.color;
+                    ctx.beginPath();
+                    ctx.ellipse(0, 0, dec.size * 0.8, dec.size, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 灯笼高光
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.beginPath();
+                    ctx.ellipse(-dec.size * 0.2, -dec.size * 0.3, dec.size * 0.3, dec.size * 0.4, -Math.PI/4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 灯笼绳子
+                    ctx.strokeStyle = '#8B4513';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(0, dec.size);
+                    ctx.lineTo(0, dec.size + 20);
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    
+                    // 更新摆动
+                    dec.swing += dec.swingSpeed;
+                }
+            });
+        }
+        
+        // 绘制气球
+        function drawBalloons() {
+            balloons.forEach(balloon => {
+                if (!balloon.popped) {
+                    ctx.save();
+                    
+                    // 气球阴影
+                    ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                    ctx.shadowBlur = 10;
+                    ctx.shadowOffsetY = 5;
+                    
+                    // 气球主体
+                    ctx.fillStyle = balloon.color;
+                    ctx.beginPath();
+                    ctx.ellipse(balloon.x, balloon.y, balloon.size, balloon.size * 1.2, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 高光
+                    ctx.shadowBlur = 0;
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                    ctx.beginPath();
+                    ctx.ellipse(balloon.x - balloon.size * 0.3, balloon.y - balloon.size * 0.4, 
+                               balloon.size * 0.3, balloon.size * 0.4, -Math.PI/4, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 分数标签
+                    ctx.fillStyle = 'white';
+                    ctx.font = 'bold 12px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(balloon.points, balloon.x, balloon.y + 3);
+                    
+                    // 绳子
+                    ctx.strokeStyle = '#666';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(balloon.x, balloon.y + balloon.size * 1.2);
+                    ctx.lineTo(balloon.x, balloon.y + balloon.size * 1.2 + 30);
+                    ctx.stroke();
+                    
+                    ctx.restore();
+                    
+                    // 更新气球位置
+                    const speedMultiplier = slowmoActive ? 0.3 : (timewarpActive ? 0.1 : 1);
+                    balloon.y -= balloon.speed * speedMultiplier;
+                    balloon.wobble += balloon.wobbleSpeed * speedMultiplier;
+                    balloon.x += Math.sin(balloon.wobble) * 0.8;
+                    
+                    // 重置位置
+                    if (balloon.y < -50) {
+                        balloon.y = 500 + Math.random() * 100;
+                        balloon.x = Math.random() * 750 + 25;
+                        combo = 0;
+                        updateCombo();
+                    }
+                }
+            });
+        }
+        
+        // 绘制道具
+        function drawPowerups() {
+            powerups.forEach(powerup => {
+                if (!powerup.collected) {
+                    ctx.save();
+                    ctx.translate(powerup.x, powerup.y);
+                    ctx.rotate(powerup.rotation);
+                    
+                    // 道具光晕
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, 20);
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                    gradient.addColorStop(0.5, 'rgba(255, 215, 0, 0.5)');
+                    gradient.addColorStop(1, 'rgba(255, 215, 0, 0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, 20, 0, Math.PI * 2);
+                    ctx.fill();
+                    
+                    // 道具图标
+                    ctx.fillStyle = '#FFD700';
+                    ctx.font = 'bold 16px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    
+                    if (powerup.type === 'multishot') {
+                        ctx.fillText('⚡', 0, 0);
+                    } else if (powerup.type === 'bonus') {
+                        ctx.fillText('💎', 0, 0);
+                    } else if (powerup.type === 'slowmo') {
+                        ctx.fillText('❄️', 0, 0);
+                    } else if (powerup.type === 'timewarp') {
+                        ctx.fillText('⏰', 0, 0);
+                    } else if (powerup.type === 'megapoints') {
+                        ctx.fillText('💰', 0, 0);
+                    }
+                    
+                    ctx.restore();
+                    
+                    // 旋转动画
+                    powerup.rotation += 0.05;
+                }
+            });
+        }
+        
+        // 绘制烟花
+        function drawFireworks() {
+            activeFireworks = activeFireworks.filter(firework => {
+                let alive = false;
+                
+                firework.particles.forEach(particle => {
+                    if (particle.life > 0) {
+                        alive = true;
+                        ctx.save();
+                        ctx.globalAlpha = particle.life;
+                        
+                        // 粒子拖尾
+                        const gradient = ctx.createRadialGradient(
+                            particle.x, particle.y, 0,
+                            particle.x, particle.y, 6
+                        );
+                        gradient.addColorStop(0, firework.color);
+                        gradient.addColorStop(0.5, firework.color);
+                        gradient.addColorStop(1, 'transparent');
+                        
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(particle.x, particle.y, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.restore();
+                        
+                        // 更新粒子
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vy += 0.15;
+                        particle.life -= 0.015;
+                        
+                        // 添加轨迹
+                        if (Math.random() < 0.3) {
+                            trails.push({
+                                x: particle.x,
+                                y: particle.y,
+                                life: 0.5,
+                                color: firework.color
+                            });
+                        }
+                    }
+                });
+                
+                return alive;
+            });
+        }
+        
+        // 绘制轨迹
+        function drawTrails() {
+            trails = trails.filter(trail => {
+                if (trail.life > 0) {
+                    ctx.save();
+                    ctx.globalAlpha = trail.life;
+                    ctx.fillStyle = trail.color;
+                    ctx.beginPath();
+                    ctx.arc(trail.x, trail.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    trail.life -= 0.02;
+                    return true;
+                }
+                return false;
+            });
+        }
+        
+        // 创建烟花
+        function createFirework(x, y, color = null) {
+            const colors = color ? [color] : ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#FFD700', '#FF69B4', '#00CED1', '#FF1493', '#00FA9A'];
+            const firework = {
+                x: x,
+                y: y,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                particles: []
+            };
+            
+            const particleCount = multishotActive ? 60 : 50;
+            for (let i = 0; i < particleCount; i++) {
+                const angle = (Math.PI * 2 * i) / particleCount;
+                const speed = Math.random() * 4 + 2;
+                firework.particles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    life: 1.0
+                });
+            }
+            
+            activeFireworks.push(firework);
+        }
+        
+        // 激活道具
+        function activatePowerup(type) {
+            const indicator = document.getElementById('powerupIndicator');
+            
+            if (type === 'multishot') {
+                multishotActive = true;
+                indicator.textContent = '⚡ 多重射击激活！';
+                score += 50;
+            } else if (type === 'bonus') {
+                indicator.textContent = '💎 奖励分数 +100！';
+                score += 100;
+            } else if (type === 'slowmo') {
+                slowmoActive = true;
+                indicator.textContent = '❄️ 时间减缓激活！';
+            } else if (type === 'timewarp') {
+                timewarpActive = true;
+                indicator.textContent = '⏰ 时间扭曲激活！';
+                timeRemaining += 10;
+                document.getElementById('timer').textContent = timeRemaining;
+            } else if (type === 'megapoints') {
+                indicator.textContent = '💰 超级分数 x3！';
+            }
+            
+            indicator.classList.add('active');
+            powerupTimer = 300;
+            
+            setTimeout(() => {
+                indicator.classList.remove('active');
+            }, 2000);
+        }
+        
+        // 更新连击显示
+        function updateCombo() {
+            const comboElement = document.getElementById('combo');
+            const comboCount = document.getElementById('comboCount');
+            
+            if (combo > 1) {
+                comboElement.classList.add('active');
+                comboCount.textContent = combo;
+                
+                if (combo > maxCombo) {
+                    maxCombo = combo;
+                    document.getElementById('maxCombo').textContent = maxCombo;
+                }
+            } else {
+                comboElement.classList.remove('active');
+            }
+        }
+        
+        // 处理点击
+        canvas.addEventListener('click', (e) => {
+            if (!gameActive) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            let hitBalloon = false;
+            
+            // 检查道具
+            powerups.forEach(powerup => {
+                if (!powerup.collected) {
+                    const dist = Math.sqrt((x - powerup.x) ** 2 + (y - powerup.y) ** 2);
+                    if (dist < 20) {
+                        powerup.collected = true;
+                        activatePowerup(powerup.type);
+                        
+                        // 重新生成道具
+                        setTimeout(() => {
+                            if (gameActive) {
+                                powerup.collected = false;
+                                powerup.x = Math.random() * 600 + 100;
+                                powerup.y = Math.random() * 200 + 200;
+                            }
+                        }, 8000);
+                    }
+                }
+            });
+            
+            // 检查气球
+            balloons.forEach(balloon => {
+                if (!balloon.popped) {
+                    const dist = Math.sqrt((x - balloon.x) ** 2 + (y - balloon.y) ** 2);
+                    if (dist < balloon.size) {
+                        balloon.popped = true;
+                        combo++;
+                        
+                        // 计算分数
+                        let points = balloon.points * (1 + Math.floor(combo / 5) * 0.5);
+                        score += Math.floor(points);
+                        
+                        // 创建分数粒子
+                        createScoreParticle(e.clientX, e.clientY, Math.floor(points));
+                        
+                        document.getElementById('score').textContent = score;
+                        hitBalloon = true;
+                        
+                        // 在气球位置创建烟花
+                        createFirework(balloon.x, balloon.y, balloon.color);
+                        
+                        // 多重射击效果
+                        if (multishotActive) {
+                            for (let i = 0; i < 3; i++) {
+                                setTimeout(() => {
+                                    createFirework(
+                                        balloon.x + (Math.random() - 0.5) * 100,
+                                        balloon.y + (Math.random() - 0.5) * 100,
+                                        balloon.color
+                                    );
+                                }, i * 100);
+                            }
+                        }
+                        
+                        // 重新生成气球
+                        setTimeout(() => {
+                            if (gameActive) {
+                                balloon.popped = false;
+                                balloon.y = 500 + Math.random() * 100;
+                                balloon.x = Math.random() * 750 + 25;
+                            }
+                        }, 1000);
+                        
+                        updateCombo();
+                        updateProgress();
+                    }
+                }
+            });
+            
+            // 如果没有点击气球，创建烟花
+            if (!hitBalloon) {
+                createFirework(x, y);
+                combo = 0;
+                updateCombo();
+            }
+        });
+        
+        // 游戏循环
+        function gameLoop() {
+            // 清空画布
+            ctx.fillStyle = 'rgba(10, 14, 39, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // 更新道具效果
+            if (powerupTimer > 0) {
+                powerupTimer--;
+                if (powerupTimer === 0) {
+                    multishotActive = false;
+                    slowmoActive = false;
+                    timewarpActive = false;
+                }
+            }
+            
+            // 绘制元素
+            drawStars();
+            drawDecorations();
+            drawTrails();
+            drawPowerups();
+            drawBalloons();
+            drawFireworks();
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // 自动烟花
+        setInterval(() => {
+            if (Math.random() < 0.4) {
+                createFirework(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height * 0.5
+                );
+            }
+        }, 1500);
+        
+        // 启动游戏
+        createFestivalDecorations();
+        startLevel(0);
+        gameLoop();
+    </script>
+</body>
+</html>
